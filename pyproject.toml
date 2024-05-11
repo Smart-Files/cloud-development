@@ -1,16 +1,17 @@
-[project]
+[tool.poetry]
 name = "smartfile_cloud"
 version = "0.0.1"
 authors = [
-  { name="Neil Agrawal", email="neil@manymailz.com" }
+  "Neil Agrawal"
 ]
-description = "A small example package"
-readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: Linux",
-]
+description = "A package to run smartfile on the cloud"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^6.2"
+flake8 = "^3.9"
 
 [project.urls]
 Homepage = "https://github.com/Smart-Files/cloud-development/"
