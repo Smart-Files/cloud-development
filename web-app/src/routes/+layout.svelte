@@ -22,7 +22,7 @@
 </script>
 
 <svelte:head>
-	<title>SvelteKit AI Chatbot</title>
+	<title>SmartFile -- Chat</title>
 </svelte:head>
 
 <Header {chats} />

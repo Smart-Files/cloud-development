@@ -5,15 +5,14 @@ import re
 from pathlib import Path
 from functools import partial
 
+from fileprocessing import state
+
 def get_current_directory_contents():
     current_directory = os.getcwd()
     contents = os.listdir(current_directory)
     return contents
 
-def execute_command_factory(uuid: str):
-    return partial(execute_command, uuid)
-
-def execute_command(uuid: str, command: str) -> dict["stdout": str, "stderr": str]:
+def execute_command(command: str) -> dict["stdout": str, "stderr": str]:
     """Executes a command in the shell and returns the output.
 
     Args:
@@ -22,6 +21,8 @@ def execute_command(uuid: str, command: str) -> dict["stdout": str, "stderr": st
     Returns:
     - output: str - The output of the command.
     """
+
+    uuid = state.get_current_uuid()
 
     command = command.strip()
     if command[0] in ["'", "`", '"', '`'] and command[len(command)-1] == command[0]:

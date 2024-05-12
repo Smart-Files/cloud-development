@@ -69,6 +69,14 @@ RUN pip install pysqlite3-binary \
     chromadb \
     langchain_openai
 
+# Install Dasel 
+RUN curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o dasel
+RUN chmod +x dasel
+RUN mv ./dasel /usr/bin/dasel
+
+# Install Firebase
+RUN pip install --user firebase-admin
+
 # Copy essential binaries and libraries from the builder stage
 COPY --from=builder /usr/local /usr/local
 
@@ -80,9 +88,9 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy the application code
 COPY ./main.py /app/main.py
-RUN mkdir /app/llm_docs /app/agent_tools /app/working_dir /app/fileprocessing
-COPY ./fileprocessing/*.py /app/fileprocessing/
-COPY ./fileprocessing/.env /app/fileprocessing/
+RUN mkdir /app/working_dir /app/fileprocessing
+COPY ./db /app/db
+COPY ./fileprocessing/* /app/fileprocessing/
 RUN mkdir /app/fileprocessing/llm_docs
 COPY ./fileprocessing/llm_docs/* /app/fileprocessing/llm_docs/
 COPY ./fileprocessing/agent_tools/* /app/fileprocessing/agent_tools/

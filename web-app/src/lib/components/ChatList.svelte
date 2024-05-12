@@ -9,23 +9,23 @@
 	let uuid: string;
 	let messages: Post[];
 
-	$: {
-		if ($posts) {
-			uuid = posts.getUUID();
-			messages = $posts.chats[uuid];
-		}
-	}
+	posts.subscribe((val) => {
+		uuid = posts.getUUID();
+		messages = val.chats?.[uuid];
+	});
 </script>
 
 {#if $posts.chats}
 	<div class="relative mx-auto max-w-2xl px-4">
-		{#each messages as message, index}
-			<div>
-				<ChatMessage {message} />
-				{#if index < messages.length - 1}
-					<Separator class="my-4 md:my-8" />
-				{/if}
-			</div>
-		{/each}
+		{#if messages}
+			{#each messages as message, index}
+				<div>
+					<ChatMessage {message} />
+					{#if index < messages.length - 1}
+						<Separator class="my-4 md:my-8" />
+					{/if}
+				</div>
+			{/each}
+		{/if}
 	</div>
 {/if}

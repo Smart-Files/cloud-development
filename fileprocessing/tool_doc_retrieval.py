@@ -60,9 +60,9 @@ def create_file_retrieval_tool():
         "search_file_tools_docs",
         """Searches and returns excerpts from documentation for CLI usage of the following tools:
         - pandoc
-            - Pandoc is a Haskell library for converting from one markup format to another, and a command-line tool that uses this library. It can read markdown and (subsets of) reStructuredText, HTML, and LaTeX, and it can write markdown, reStructuredText, HTML, LaTeX, ConTeXt, PDF, RTF, DocBook XML, OpenDocument XML, ODT, Word docx, GNU Texinfo, MediaWiki markup, EPUB, FictionBook2, Textile, groff, etc.
+            - Pandoc is a library for converting from one markup format to another, and a command-line tool that uses this library. It can read markdown and (subsets of) reStructuredText, HTML, and LaTeX, and it can write markdown, reStructuredText, HTML, LaTeX, ConTeXt, PDF, RTF, DocBook XML, OpenDocument XML, ODT, Word docx, GNU Texinfo, MediaWiki markup, EPUB, FictionBook2, Textile, groff, etc.
         - ffmpeg
-            - FFmpeg is a free and open-source project consisting of a large software suite of libraries and programs for handling video, audio, and other multimedia files and streams.  FFmpeg is designed for command-line-based processing of video and audio files and is used for format transcoding, basic editing (trimming and concatenation), video scaling, video post-production effects, and standards compliance (SMPTE, ITU).
+            - FFmpeg is a software suite of libraries and programs for handling video, audio, and other multimedia files and streams.  FFmpeg is designed for command-line-based processing of video and audio files and is used for format transcoding, basic editing (trimming and concatenation), video scaling, video post-production effects, and standards compliance (SMPTE, ITU).
         - image magick
             - ImageMagick is a CLI tool for displaying, converting, and editing raster image and vector image files. It can read and write over 200 image file formats. ImageMagick can resize, flip, mirror, rotate, distort, shear and transform images, adjust image colors, apply various special effects, or draw text, lines, polygons, ellipses, and Bézier curves.
         - poppler
@@ -72,10 +72,12 @@ def create_file_retrieval_tool():
             - pdftocairo renders PDF files as Images using cairo.
             - pdftohtml converts PDF files to HTML.
             - pdfunite merges several PDF files into one PDF file.
+        - dasel
+            - Dasel is a command-line tool for querying, manipulating and converting JSON, YAML, and XML documents using a simple, intuitive, and expressive query language. 
 
-        These tools will help you to operations with files.
+        These tools will help you to execute operations with files.
 
-        Search any query with the tool name to get the documentation for that tool. For example, "pandoc convert markdown to pdf" will return the documentation for the pandoc tool.
+        Search the documentation for the tool you want to use. For example, "pandoc convert markdown to pdf" will provide documentation for the pandoc tool.
         """,
     )
 

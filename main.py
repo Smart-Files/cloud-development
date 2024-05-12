@@ -1,6 +1,8 @@
+import asyncio
 import json
 from fastapi import FastAPI, Query, Request, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse, StreamingResponse
+from fileprocessing import state
 from fileprocessing import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from langchain_core.messages.ai import AIMessage
@@ -13,7 +15,10 @@ import uuid
 import os
 import shutil
 from fastapi.middleware.cors import CORSMiddleware
+from fileprocessing import firestore
 
+db = firestore.db
+app = firestore.app
 
 origins = [
     "http://localhost",
@@ -46,11 +51,39 @@ logger.addHandler(handler)
 # Replace with persistent cross-system store
 connected_uuids = {}
 
+
 # @app.middleware("http")
 # async def log_requests(request: Request, call_next):
 #     logger.debug(f"Received request: {request.method} {request.url}")
 #     response = await call_next(request)
 #     return response
+
+class AgentExecutorManager:
+    _instance = None
+
+    def __init__(self):
+        if AgentExecutorManager._instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            AgentExecutorManager._instance = self
+            self.executor = None
+
+    @staticmethod
+    def get_instance():
+        if AgentExecutorManager._instance is None:
+            AgentExecutorManager()
+        return AgentExecutorManager._instance
+
+    async def get_or_create_executor(self):
+        if self.executor is None:
+            agent_config = await tools_agent.init_tools_agent()
+            agent = create_react_agent(agent_config["llm"], agent_config["tools"], agent_config["prompt"])
+            self.executor = AgentExecutor(agent=agent, tools=agent_config["tools"], agent_config=True, max_execution_time=25, handle_parsing_errors=True)
+        return self.executor
+
+async def get_agent_executor() -> AgentExecutor:
+    manager = AgentExecutorManager.get_instance()
+    return await manager.get_or_create_executor()
 
 
 @app.get("/") 
@@ -90,8 +123,8 @@ async def upload_files(uuid: str = Form(...), files: list[UploadFile] = File(...
 
 
 
-@app.get("/download/{file_path:path}")
-async def download_file(file_path: str, uuid: str = Query(default="", description="Operation UUID")):
+@app.get("/download/{uuid:path}/{file_path:path}")
+async def download_file(uuid: str, file_path: str):
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
@@ -103,7 +136,7 @@ async def download_file(file_path: str, uuid: str = Query(default="", descriptio
     secure_path = os.path.normpath(full_path)
 
     # Prevent directory traversal attack.
-    if not secure_path.startswith(os.path.abspath(full_path)):
+    if not secure_path.startswith(os.path.abspath(directory)):
         raise HTTPException(status_code=400, detail="Invalid file path")
 
     # Check if the file exists
@@ -125,6 +158,8 @@ class AIMessageDecoder(json.JSONEncoder):
                 return {"message": "Human", "type": "message", "content": obj.content}
             return json.JSONEncoder.default(self, obj)
 
+
+
 @app.get("/process_request/")
 async def stream_response(query: str = Query(default="", description="Input Query"), uuid: str = Query(default="", description="Operation UUID")):
     logger.info("QUERY: " + query)
@@ -133,12 +168,8 @@ async def stream_response(query: str = Query(default="", description="Input Quer
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
-    output = await tools_agent.init_tools_agent(uuid) # Generate tools, prompt and model
- 
-    agent = create_react_agent(output["llm"], output["tools"], output["prompt"])
-    agent_executor = AgentExecutor(agent=agent, tools=output["tools"], verbose=True, max_execution_time=25, handle_parsing_errors=True)
-
     file_dir = os.path.join("/app/working_dir", uuid)
+    state.set_current_uuid(uuid)
 
     async def event_stream():
         # Return initial response to clientx
@@ -146,6 +177,8 @@ async def stream_response(query: str = Query(default="", description="Input Quer
         # yield f"data: {json.dumps(return_object)}"
 
         # Run on each chunk received from agent stream
+        agent_executor = await get_agent_executor()
+
         input_files = os.listdir(file_dir)
         async for result in agent_executor.astream({"input": f"{query}.\n\n{'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"}):
             print("RESULT", result)
@@ -155,7 +188,15 @@ async def stream_response(query: str = Query(default="", description="Input Quer
                 files = os.listdir(file_dir)
                 result['files'] = files
 
-            yield f"data: {json.dumps(result, cls=AIMessageDecoder)}\n\n"
+            data_string = json.dumps(result, cls=AIMessageDecoder)
+            
+            result = json.loads(data_string)
+
+            result["uuid"] = uuid
+
+            db.collection("process").document(uuid).set(result)
+
+            yield f"data: {data_string}\n\n"
         # Return completion message to client
 
         completion_message = {"status": "completed", "uuid": uuid}
@@ -164,3 +205,5 @@ async def stream_response(query: str = Query(default="", description="Input Quer
     # Return streaming response to client with event stream
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
+if __name__ == "__main__":
+    asyncio.run(init_agent())

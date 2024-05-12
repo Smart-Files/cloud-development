@@ -11,9 +11,11 @@ from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langsmith import Client
+from fileprocessing.ask_clarification import ask_clarification
 
 from fileprocessing import execute_command
 from fileprocessing import tool_doc_retrieval
+from fileprocessing import state
 
 
 import os
@@ -93,7 +95,7 @@ def load_documents_db(directory: str):
 
     
 
-async def init_tools_agent( uuid: str) -> AgentExecutor:
+async def init_tools_agent() -> AgentExecutor:
     """
     Generates tools and prompts and return them along with the preferred model
     """
@@ -102,10 +104,11 @@ async def init_tools_agent( uuid: str) -> AgentExecutor:
     file_tool = tool_doc_retrieval.create_file_retrieval_tool()
 
 
-    execute_tool = Tool(name="Execute Shell Command",func=execute_command.execute_command_factory(uuid), description="Executes a shell command and returns the output. Do not install any software or packages, all packages are available using tools in documentation")
+    execute_tool = Tool(name="Execute Shell Command",func=execute_command.execute_command, description="Executes a shell command and returns the output. Do not install any software or packages, all packages are available using tools in documentation")
 
+    ask_clarification_tool = Tool(name="Ask Clarification from user", func=ask_clarification, description="Ask for clarification on the given input from a user, keep input between 30 and 200 words")
 
-    tools = [execute_tool, file_tool]
+    tools = [execute_tool, file_tool, ask_clarification_tool]
 
     # Construct the tool calling agent
     # agent = initialize_agent(tools, llm, agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION, callback_manager=callback_manager)

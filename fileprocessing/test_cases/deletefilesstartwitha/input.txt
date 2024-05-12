@@ -1,5 +1,0 @@
-Can remove the files that start with the letter a in this zip?
-
-remove 'a' files from zip
-
-remove files that start with 'a'

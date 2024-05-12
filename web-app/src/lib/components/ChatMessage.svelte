@@ -7,6 +7,7 @@
 	import IconSvelteChat from './ui/icons/IconSvelteChat.svelte';
 	import { Card } from 'flowbite-svelte';
 	import { CodeBlock } from 'svhighlight';
+	import { BASE_URL } from '$lib/smartfileclient';
 
 	export let message: Post;
 
@@ -49,7 +50,8 @@
 				}
 				return line;
 			})
-			.join('<br/>');
+			.filter((line) => line !== '')
+			.join('\n');
 
 		return content;
 	}
@@ -72,9 +74,8 @@
 		{@html formatMessage(message.content)}
 		{#if message.actions}
 			{#each message.actions as action}
-				{console.log(action)}
 				<CodeBlock
-					code={action.tool_input.replace('/', '&#92;')}
+					code={action.tool_input}
 					language={getSearchType(action.tool).language}
 					headerText={getSearchType(action.tool).headerText}
 					showLineNumbers={false}
@@ -83,7 +84,7 @@
 		{/if}
 		{#if message.output && message.files}
 			{#each message.files as file}
-				<a target="_blank" href={`/download/${file}?uuid=${message.uuid}`}>
+				<a target="_blank" href={`${BASE_URL}download/${message.uuid}/${file}`}>
 					<div
 						class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
 					>

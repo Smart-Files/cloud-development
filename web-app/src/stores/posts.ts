@@ -15,6 +15,7 @@ export type Post = {
     role: Sender;
     actions?: any;
     output?: string;
+    steps?: any;
 
 }
 

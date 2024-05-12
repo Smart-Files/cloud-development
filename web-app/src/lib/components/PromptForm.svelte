@@ -45,6 +45,10 @@
 		draggingOver = true;
 	};
 
+	const dragEnter = (e: DragEvent) => {
+		draggingOver = true;
+	};
+
 	const dragLeave = () => {
 		draggingOver = false;
 	};
@@ -101,8 +105,9 @@
 		on:drop={dropHandle}
 		on:dragover={(event) => {
 			event.preventDefault();
+			dragOver(event);
 		}}
-		on:dragenter={dragOver}
+		on:dragenter={dragEnter}
 		on:dragleave={dragLeave}
 		on:change={handleChange}
 	>
