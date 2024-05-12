@@ -32,7 +32,7 @@ def execute_command(uuid: str, command: str) -> dict["stdout": str, "stderr": st
     cwd = os.getcwd()
     print(cwd)
     Path(f"/app/working_dir/{uuid}").mkdir(parents=True, exist_ok=True)
-    os.chdir("/app/working_dir/{uuid}")
+    os.chdir(f"/app/working_dir/{uuid}")
 
      
     result = subprocess.run(

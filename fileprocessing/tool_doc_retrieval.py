@@ -69,7 +69,7 @@ def create_file_retrieval_tool():
             - Poppler is a library for rendering PDF documents. It includes the following tools:
             - pdfimages saves images from a PDF file as PPM, PBM, PNG, TIFF, JPEG, JPEG2000, or JBIG2 files.
             - pdftotext converts PDF files to plain text.
-            - pdftocairo renders PDF files as PNG, PS, EPS, SVG, or PDF files using cairo.
+            - pdftocairo renders PDF files as Images using cairo.
             - pdftohtml converts PDF files to HTML.
             - pdfunite merges several PDF files into one PDF file.
 

@@ -93,7 +93,10 @@ def load_documents_db(directory: str):
 
     
 
-async def init_tools_agent( input: str, output_file: str, llm: ChatOpenAI=llm_llama3, uuid: str) -> AgentExecutor:
+async def init_tools_agent( uuid: str) -> AgentExecutor:
+    """
+    Generates tools and prompts and return them along with the preferred model
+    """
     prompt = hub.pull("hwchase17/react")
 
     file_tool = tool_doc_retrieval.create_file_retrieval_tool()
@@ -113,7 +116,7 @@ async def init_tools_agent( input: str, output_file: str, llm: ChatOpenAI=llm_ll
 
     # print(output)
 
-    return {"llm": llm, "tools": tools, "prompt": prompt}
+    return {"llm": llm_llama3, "tools": tools, "prompt": prompt}
     
 if __name__ == "__main__":
     input = ""

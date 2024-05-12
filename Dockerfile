@@ -66,7 +66,8 @@ RUN curl -o /usr/bin/magick https://imagemagick.org/archive/binaries/magick && \
     chmod +x /usr/bin/magick
 
 RUN pip install pysqlite3-binary \
-    chromadb
+    chromadb \
+    langchain_openai
 
 # Copy essential binaries and libraries from the builder stage
 COPY --from=builder /usr/local /usr/local
@@ -79,11 +80,13 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy the application code
 COPY ./main.py /app/main.py
-RUN mkdir /app/llm_docs /app/agent_tools /app/working_dir
-COPY ./fileprocessing/llm_docs/* /app/llm_docs/
-COPY ./fileprocessing/tool_doc_retrieval.py /app/tool_doc_retrieval.py
-COPY ./fileprocessing/tools_agent.py /app/tools_agent.py
-COPY ./fileprocessing/execute_command.py /app/execute_command.py
+RUN mkdir /app/llm_docs /app/agent_tools /app/working_dir /app/fileprocessing
+COPY ./fileprocessing/*.py /app/fileprocessing/
+COPY ./fileprocessing/.env /app/fileprocessing/
+RUN mkdir /app/fileprocessing/llm_docs
+COPY ./fileprocessing/llm_docs/* /app/fileprocessing/llm_docs/
+COPY ./fileprocessing/agent_tools/* /app/fileprocessing/agent_tools/
 
 EXPOSE 8080
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# uvicorn main:app --host 0.0.0.0 --port 8080
