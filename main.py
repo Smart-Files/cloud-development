@@ -1,11 +1,13 @@
 import asyncio
 import json
+from typing import Callable
 from fastapi import FastAPI, Query, Request, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse, StreamingResponse
-from fileprocessing import state
+from pydantic import BaseModel
 from fileprocessing import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from langchain_core.messages.ai import AIMessage
+from langchain.memory.buffer import ConversationBufferMemory
 
 
 from langchain.agents import AgentExecutor, create_react_agent
@@ -15,10 +17,9 @@ import uuid
 import os
 import shutil
 from fastapi.middleware.cors import CORSMiddleware
-from fileprocessing import firestore
+from fileprocessing.firestore import db, app
+from firebase_admin import firestore
 
-db = firestore.db
-app = firestore.app
 
 origins = [
     "http://localhost",
@@ -57,34 +58,6 @@ connected_uuids = {}
 #     logger.debug(f"Received request: {request.method} {request.url}")
 #     response = await call_next(request)
 #     return response
-
-class AgentExecutorManager:
-    _instance = None
-
-    def __init__(self):
-        if AgentExecutorManager._instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            AgentExecutorManager._instance = self
-            self.executor = None
-
-    @staticmethod
-    def get_instance():
-        if AgentExecutorManager._instance is None:
-            AgentExecutorManager()
-        return AgentExecutorManager._instance
-
-    async def get_or_create_executor(self):
-        if self.executor is None:
-            agent_config = await tools_agent.init_tools_agent()
-            agent = create_react_agent(agent_config["llm"], agent_config["tools"], agent_config["prompt"])
-            self.executor = AgentExecutor(agent=agent, tools=agent_config["tools"], agent_config=True, max_execution_time=25, handle_parsing_errors=True)
-        return self.executor
-
-async def get_agent_executor() -> AgentExecutor:
-    manager = AgentExecutorManager.get_instance()
-    return await manager.get_or_create_executor()
-
 
 @app.get("/") 
 async def root():
@@ -159,9 +132,32 @@ class AIMessageDecoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
+class Auth(BaseModel):
+    uuid: str
+
+agent_executors = {}
+
+def set_agent_executor(agent_executor: AgentExecutor, uuid: str):
+    agent_executors[uuid] = agent_executor
+
+def get_agent_executor(uuid: str):
+    return agent_executors.get(uuid, None)
+
+@app.post("/stop")
+async def stop_agent(uuid: Auth):
+    uuid = uuid.uuid
+    if connected_uuids.get(uuid, None) == None:
+        return {"error": "Forbidden: invalid uuid provided", "code": 400}
+    agent_executor = get_agent_executor(uuid)
+    if agent_executor:
+        agent_executor.max_iterations = 0
+
+    
 
 @app.get("/process_request/")
 async def stream_response(query: str = Query(default="", description="Input Query"), uuid: str = Query(default="", description="Operation UUID")):
+    
+    
     logger.info("QUERY: " + query)
     logger.info("UUID: " + uuid)
     logger.info("CONNECTED UUIDS: " + str(connected_uuids))
@@ -169,41 +165,56 @@ async def stream_response(query: str = Query(default="", description="Input Quer
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
     file_dir = os.path.join("/app/working_dir", uuid)
-    state.set_current_uuid(uuid)
 
-    async def event_stream():
-        # Return initial response to clientx
-        # return_object = {"status": "starting", "uuid": uuid}
-        # yield f"data: {json.dumps(return_object)}"
+    os.makedirs(file_dir, exist_ok=True)
+    
+    agent_config = await tools_agent.init_tools_agent(uuid)
+    agent = create_react_agent(agent_config["llm"], agent_config["tools"], agent_config["prompt"])
+    agent_executor = AgentExecutor(agent=agent, 
+                                   tools=agent_config["tools"], 
+                                   agent_config=True, 
+                                   max_execution_time=90,  
+                                   max_iterations=25,
+                                   handle_parsing_errors=True, 
+                                   memory=ConversationBufferMemory())
+    
+    
+    set_agent_executor(agent_executor, uuid);
 
-        # Run on each chunk received from agent stream
-        agent_executor = await get_agent_executor()
+    input_files = os.listdir(file_dir)
 
-        input_files = os.listdir(file_dir)
-        async for result in agent_executor.astream({"input": f"{query}.\n\n{'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"}):
-            print("RESULT", result)
+    process_doc = db.collection("process") \
+        .document(uuid)
 
-            logger.info("RESULT: " + str(result))
-            if (result.get('output', None)):
-                files = os.listdir(file_dir)
-                result['files'] = files
+    events_ref = process_doc \
+            .collection("events")
+    
+    events_ref.document() \
+        .set({"status": "started", "input_files": os.listdir(file_dir), "query": query})
 
-            data_string = json.dumps(result, cls=AIMessageDecoder)
-            
-            result = json.loads(data_string)
+    metadata_doc = process_doc \
+        .collection("events") \
+        .document("metadata")
+    
 
-            result["uuid"] = uuid
+    process_doc.set({"status": "started", "input_files": os.listdir(file_dir), "query": query, "chunks": [], "chunk_count": 0})
 
-            db.collection("process").document(uuid).set(result)
+    async for result in agent_executor.astream({"input": f"{query}.\n\n{'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"}):
+        logger.info("RESULT: " + str(result))
+        if (result.get('output', None)):
+            files = os.listdir(file_dir)
+            result['files'] = files
+        data_string = json.dumps(result, cls=AIMessageDecoder)
+        
+        result = json.loads(data_string)
 
-            yield f"data: {data_string}\n\n"
-        # Return completion message to client
+        result["uuid"] = uuid
 
-        completion_message = {"status": "completed", "uuid": uuid}
-        yield f"data: {json.dumps(completion_message)}\n\n"
+        # events_ref.document() \
+        #     .set(result.update({"status": "chunk", "input_files": os.listdir(file_dir), "query": query}))
 
-    # Return streaming response to client with event stream
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+        process_doc.set({"chunk_count": firestore.Increment(1), "chunks": firestore.ArrayUnion([result])})
+
 
 if __name__ == "__main__":
     asyncio.run(init_agent())

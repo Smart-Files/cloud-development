@@ -12,12 +12,13 @@
 		Listgroup,
 		ListgroupItem,
 		Dropzone,
-		Indicator
+		Indicator,
+		P
 	} from 'flowbite-svelte';
-	import { get, writable } from 'svelte/store';
+	import { get, writable, type Writable } from 'svelte/store';
 	import type { ChangeEvent } from 'svelte/elements';
 	import { FileSymlink } from 'lucide-svelte';
-	import { files, input } from '../../stores/posts';
+	import { WriteStatus, files, input } from '../../stores/posts';
 
 	// All files that are uploaded will be stored here
 	let draggingOver = false; // Whether the user is dragging over the dropzone or not
@@ -29,8 +30,20 @@
 	const notDraggingOverClass =
 		'flex flex-row justify-center items-center w-full rounded-lg border-2 outline-4 outline outline-zinc-900 hover:outline-zinc-800 hover:border-zinc-8000 cursor-pointer bg-zinc-900 border-zinc-900 hover:bg-zinc-800 h-16'; // Classes to apply when the user is not dragging over the dropzone
 
-	export let isLoading: UseChatHelpers['isLoading'];
+	export let isLoading: Writable<WriteStatus>;
 	// export let files: UseChatHelpers['files'];
+
+	let value = '';
+	let previousFiles: File[] = [];
+
+	files.subscribe((fileData) => {
+		if (fileData.length < previousFiles.length) {
+			value = '';
+			previousFiles = fileData;
+		} else {
+			previousFiles = fileData;
+		}
+	});
 
 	async function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
@@ -58,9 +71,9 @@
 		event.preventDefault();
 		if (event.dataTransfer?.items) {
 			[...event.dataTransfer.items].forEach((item, i) => {
-				console.log('ITEM', item);
+				console.log('File Dropped', item);
 				let file: File;
-				if (item.kind === 'file' && (file = item.getAsFile()) !== null) {
+				if (item.kind === 'file') {
 					files.update((files) => [...files, file]);
 				} else {
 					console.log('ERROR: NOT A FILE');
@@ -68,7 +81,7 @@
 			});
 		} else {
 			[...event.dataTransfer?.files].forEach((file, i) => {
-				console.log('FILE', file);
+				console.log('File Dropped', file);
 				files.update((files) => [...files, file]);
 			});
 		}
@@ -77,6 +90,7 @@
 	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const eventFiles = event.target.files;
 		for (const file of eventFiles) {
+			console.log('File Selected', file);
 			files.update((files) => [...files, file]);
 		}
 	};
@@ -100,6 +114,7 @@
 	<Dropzone
 		id="dropzone"
 		multiple
+		{value}
 		defaultClass={`${draggingOver ? draggingOverClass : notDraggingOverClass}`}
 		{$files}
 		on:drop={dropHandle}
@@ -135,16 +150,6 @@
 			/>
 		</svg>
 	</Dropzone>
-	{#if $files}
-		<div>
-			{#each $files as file}
-				<span class="flex items-center">
-					<Indicator size="sm" color="orange" class="me-1.5" />
-					{file.name}
-				</span>
-			{/each}
-		</div>
-	{/if}
 </div>
 <form
 	on:submit={async (event) => {
@@ -191,9 +196,15 @@
 		<div class="absolute right-0 top-3 sm:right-4">
 			<Tooltip>
 				<TooltipTrigger>
-					<Button type="submit" size="icon" disabled={$isLoading || $input === ''}>
+					<Button
+						type="submit"
+						size="icon"
+						disabled={$isLoading === WriteStatus.LOADING ||
+							$isLoading == WriteStatus.error ||
+							$input === ''}
+					>
 						<IconArrowElbow />
-						<span class="sr-only">Send message</span>
+						<span class="sr-only">oSend message</span>
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent>Send message</TooltipContent>

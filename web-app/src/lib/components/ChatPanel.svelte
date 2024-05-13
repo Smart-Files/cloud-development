@@ -2,18 +2,21 @@
 	import ButtonScrollToBottom from '$lib/components/ButtonScrollToBottom.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { IconRefresh, IconStop } from '$lib/components/ui/icons';
-	import type { UseChatHelpers } from 'ai/svelte';
 	import FooterText from '$lib/components/FooterText.svelte';
 	import PromptForm from '$lib/components/PromptForm.svelte';
-	import { writable, type Writable } from 'svelte/store';
-	import { getFn } from 'vitest/dist/suite.js';
-	import type { Post, PostStore, usePosts } from '../../stores/posts';
+	import type { Writable } from 'svelte/store';
+	import {
+		WriteStatus,
+		write_status,
+		type Post,
+		type PostStore,
+		type usePosts
+	} from '../../stores/posts';
 
 	let id: string;
 	let messages: Post[];
 
 	export let posts: ReturnType<typeof usePosts>;
-	let isLoading = writable(false);
 	export let input: Writable<string>;
 
 	$: {
@@ -25,6 +28,7 @@
 
 	const stop = () => {
 		// posts.stop();
+		posts.stop();
 	};
 	const reload = () => {
 		// posts.reload();
@@ -41,12 +45,12 @@
 	<ButtonScrollToBottom />
 	<div class="mx-auto sm:max-w-2xl sm:px-4">
 		<div class="flex h-10 items-center justify-center">
-			{#if isLoading}
+			{#if $write_status == WriteStatus.LOADING}
 				<Button variant="outline" on:click={() => stop()} class="bg-background">
 					<IconStop class="mr-2" />
 					Stop generating
 				</Button>
-			{:else if messages?.length > 0}
+			{:else if $posts && $posts.chats[id].length > 0}
 				<Button variant="outline" on:click={() => reload()} class="bg-background">
 					<IconRefresh class="mr-2" />
 					Regenerate response
@@ -60,7 +64,7 @@
 				on:submit={async (event) => {
 					gen(event.detail);
 				}}
-				{isLoading}
+				isLoading={write_status}
 			/>
 		</div>
 	</div>

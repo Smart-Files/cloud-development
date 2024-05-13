@@ -20,5 +20,6 @@ export { default as IconSun } from './IconSun.svelte';
 export { default as IconSvelteChat } from './IconSvelteChat.svelte';
 export { default as IconTrash } from './IconTrash.svelte';
 export { default as IconUser } from './IconUser.svelte';
+export { default as IconDownload } from './IconDownload.svelte';
 export { default as IconUsers } from './IconUsers.svelte';
 export { default as IconVercel } from './IconVercel.svelte';

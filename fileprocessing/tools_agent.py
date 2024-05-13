@@ -11,11 +11,10 @@ from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langsmith import Client
-from fileprocessing.ask_clarification import ask_clarification
+from fileprocessing.ask_clarification import ask_clarification_factory
 
-from fileprocessing import execute_command
-from fileprocessing import tool_doc_retrieval
-from fileprocessing import state
+from fileprocessing.execute_command import execute_command_factory
+from fileprocessing.tool_doc_retrieval import create_file_retrieval_tool
 
 
 import os
@@ -24,6 +23,8 @@ import asyncio
 
 load_dotenv()
 PERSIST_DIR = 'db'
+
+file_tool = None
 
 OPENROUTER_API_KEY = os.getenv('GROQ_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -95,20 +96,23 @@ def load_documents_db(directory: str):
 
     
 
-async def init_tools_agent() -> AgentExecutor:
+async def init_tools_agent(uuid: str) -> AgentExecutor:
+    global file_tool
     """
     Generates tools and prompts and return them along with the preferred model
     """
     prompt = hub.pull("hwchase17/react")
 
-    file_tool = tool_doc_retrieval.create_file_retrieval_tool()
+    if file_tool is None:
+        file_tool = create_file_retrieval_tool()
 
 
-    execute_tool = Tool(name="Execute Shell Command",func=execute_command.execute_command, description="Executes a shell command and returns the output. Do not install any software or packages, all packages are available using tools in documentation")
 
-    ask_clarification_tool = Tool(name="Ask Clarification from user", func=ask_clarification, description="Ask for clarification on the given input from a user, keep input between 30 and 200 words")
+    execute_tool = Tool(name="Execute Shell Command",func=execute_command_factory(uuid), description="Executes a shell command and returns the output. Do not install any software or packages, all packages are available using tools in documentation")
 
-    tools = [execute_tool, file_tool, ask_clarification_tool]
+    # ask_clarification_tool = Tool(name="Ask Clarification from user", func=ask_clarification_factory(uuid), description="Ask for clarification on the given input from a user, keep input between 30 and 200 words")
+
+    tools = [execute_tool, file_tool]
 
     # Construct the tool calling agent
     # agent = initialize_agent(tools, llm, agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION, callback_manager=callback_manager)

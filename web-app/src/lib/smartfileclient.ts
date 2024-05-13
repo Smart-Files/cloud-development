@@ -10,10 +10,11 @@
  * 4. Get the file URL
  * 
  */
-import { doc, onSnapshot } from "firebase/firestore";
-import { posts, type Post } from "../stores/posts";
+import { QuerySnapshot, collection, doc, getDoc, onSnapshot, query as qref, where, type DocumentChange, DocumentSnapshot } from "firebase/firestore";
+import { posts, type Post, write_status, WriteStatus, files as files_store } from "../stores/posts";
 import { db } from "./firestore";
 import { get } from "svelte/store";
+import { P } from "flowbite-svelte";
 
 export const BASE_URL = "http://localhost:8080/"
 
@@ -27,6 +28,7 @@ export default class SmartfileClient {
     }
 
     private async requestNewUUID() {
+        console.log("Requesting new UUID")
         let response: Response = await fetch(BASE_URL + "auth", {
             method: "POST",
             headers: {
@@ -37,19 +39,6 @@ export default class SmartfileClient {
         return json ? json.uuid : "";
     }
 
-    private async checkUUID(uuid: string) {
-        let response: Response = await fetch(BASE_URL + "validate?uuid=" + uuid);
-
-        let responseData = await response.json();
-
-        console.log("Response", responseData)
-
-        if (responseData.status == "authenticated") {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     public async auth() {
         this.uuid = await this.requestNewUUID();
@@ -58,6 +47,19 @@ export default class SmartfileClient {
         console.log("Authentication Complete: ", this.authenticated, this.uuid);
 
         return this.authenticated ? { status: "success", uuid: this.uuid } : { status: "error", error: "Failed to authenticate" };
+    }
+
+    public async stop() {
+        let response = await fetch(`${BASE_URL}stop`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ uuid: this.uuid })
+        })
+
+        return response
     }
 
 
@@ -92,6 +94,10 @@ export default class SmartfileClient {
             body: formData
         });
 
+        files_store.set(files);
+
+
+
         let json = await response.json();
         return json;
     }
@@ -99,70 +105,65 @@ export default class SmartfileClient {
 
 
     // Use EventSource to begin process and listen for updates
-    private beginProcess(query: string, uuid: string) {
+    private async beginProcess(query: string, uuid: string) {
         const url = `${BASE_URL}process_request?query=${query}&uuid=${uuid}`;
         // Subscribe to Firestore updates for this UUID
-        const unsubscribe = onSnapshot(doc(db, "processes", uuid), (doc) => {
-            console.log("Current data: ", doc.data());
-            // Assuming the structure of documents in 'processes' is appropriate for this update logic
-            posts.update(posts => ({
-                chats: {
-                    ...posts.chats,
-                    [uuid]: doc.data()?.messages
+        let processDoc = doc(db, "process", uuid)
+        let eventsRef = collection(processDoc, "events")
+
+
+        // const q = qref(processDoc); // Ensure correct use of query function from Firestore
+        const unsubscribe = onSnapshot(doc(db, "process", uuid), (doc: DocumentSnapshot) => {
+            let data = doc.data()
+
+            if (data != undefined && data.chunks) {
+                for (let chunk of data.chunks) { // Update posts only with newly added documents
+
+                    console.log("-- data --", chunk)
+                    if (chunk.status == "completed") {
+                        write_status.set(WriteStatus.done);
+                    }
+                    if (chunk.messages && chunk.messages.length > 0) {
+                        if (chunk.messages[0].content == "") {
+                            console.log("Empty message")
+                            continue
+                        }
+                    } else {
+                        continue
+                    }
+
+                    console.log("FOUNDCHUNK", chunk.messages)
+
+                    if (chunk.messages[0].content.startsWith("Invalid Format:")) {
+                        continue
+                    }
+
+                    if (chunk.messages[0].content.startsWith("Command:")) {
+                        let post_data = get(posts);
+                        let all_posts = post_data.chats[this.uuid]
+                        let new_post = all_posts[all_posts.length - 1]
+                        all_posts[all_posts.length - 1] = { ...new_post, bash_output: chunk.messages[0].content }
+                        posts.update(old_posts => ({ chats: { ...old_posts.chats, [this.uuid]: all_posts } }));
+
+
+                    } else {
+                        posts.update(posts => ({
+                            chats: {
+                                ...posts.chats,
+                                [uuid]: [...(posts.chats[uuid] || []), chunk]
+                            }
+                        }));
+                    }
                 }
-            }));
+            }
         });
 
-        const eventSource = new EventSource(url);
-        eventSource.onmessage = function (event) {
-            // console.log('-- DATA --\n', event.data);
-            let data = JSON.parse(event.data);
-            // console.log('-- PARSED --\n', data);
+        write_status.set(WriteStatus.loading);
 
 
-            if (data.status == "completed") {
-                console.log("Processing complete");
-                eventSource.close();
-                unsubscribe();
-                return;
-            }
+        let result = await fetch(url);
 
-            if (!(data.messages)) {
-                console.log("No data, skipping");
-                return;
-            }
-
-            if (data.steps) {
-                console.log("Steps: ", data.steps);
-                let post_data = get(posts);
-                let all_posts = post_data.chats[uuid]
-                let new_post = all_posts[all_posts.length - 1]
-                all_posts[all_posts.length - 1] = { ...new_post, steps: data.steps }
-                posts.update(old_posts => ({ chats: { ...old_posts.chats, [uuid]: all_posts } }));
-            }
-
-
-
-            let content = data.messages[0].content
-
-            let new_post: Post = {
-                uuid: uuid,
-                content: content,
-                output: data.output,
-                actions: data.actions,
-                files: data.files,
-                created_at: new Date().toISOString(),
-                role: "bot"
-            }
-
-            posts.update(posts => ({ chats: { ...posts.chats, [uuid]: [...(posts.chats[uuid] || []), new_post] } }));
-        };
-
-        eventSource.onerror = function (error) {
-            console.error('EventSource failed:', error);
-            eventSource.close();
-        };
-
+        return result
 
     }
 
