@@ -1,0 +1,8 @@
+# .dockerignore
+test_cases
+**/__pycache__
+**/*.pyc
+.git
+.dockerignore
+Dockerfile
+README.md

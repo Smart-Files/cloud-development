@@ -1,0 +1,56 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+    annotations:
+        run.googleapis.com/ingress: all
+        run.googleapis.com/ingress-status: all
+    labels:
+        cloud.googleapis.com/location: us-central1
+    name: smartfile-dev
+    namespace: "414550313170"
+spec:
+    template:
+        metadata:
+            annotations:
+                autoscaling.knative.dev/maxScale: "100"
+                run.googleapis.com/client-name: gcloud
+                run.googleapis.com/client-version: 475.0.0
+                run.googleapis.com/startup-cpu-boost: "true"
+            labels:
+                client.knative.dev/nonce: djnsvmyvhb
+                run.googleapis.com/startupProbeType: Default
+        spec:
+            containerConcurrency: 80
+            containers:
+                - image: gcr.io/smartfile-422907/smartfile_build_10:latest
+                  command:
+                      - uvicorn main:app --host 0.0.0.0 --port 8080
+                  name: smartfile-build-01-1
+                  ports:
+                      - containesrPort: 8080
+                        name: http1
+                  resources:
+                      limits:
+                          cpu: 1000m
+                          memory: 1Gi
+                  startupProbe:
+                      failureThreshold: 1
+                      periodSeconds: 240
+                      tcpSocket:
+                          port: 8080
+                      timeoutSeconds: 240
+                  volumeMounts:
+                      - mountPath: /app
+                        name: firebase-admin-service-account-voz-bat-huy
+            serviceAccountName: 414550313170-compute@developer.gserviceaccount.com
+            timeoutSeconds: 300
+            volumes:
+                - name: firebase-admin-service-account-voz-bat-huy
+                  secret:
+                      items:
+                          - key: latest
+                            path: smartfile-account.json
+                      secretName: firebase-admin-service-account
+    traffic:
+        - latestRevision: true
+          percent: 100
