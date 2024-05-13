@@ -3,6 +3,8 @@
 	import { IconGitHub, IconSpinner } from '$lib/components/ui/icons';
 	import { cn } from '$lib/utils';
 	import { signIn } from '@auth/sveltekit/client';
+	import type { Writable } from 'svelte/store';
+	import { WriteStatus } from '../../stores/posts';
 
 	export let text = 'Login with GitHub';
 	export let showGithubIcon = true;
@@ -10,20 +12,20 @@
 	let className: string | undefined | null = undefined;
 	export { className as class };
 
-	let isLoading = false;
+	export let isLoading: Writable<WriteStatus>;
 </script>
 
 <Button
 	variant="outline"
 	on:click={() => {
-		isLoading = true;
+		// isLoading.set(true);
 		signIn('github', { callbackUrl: `/` });
 	}}
-	disabled={isLoading}
+	disabled={$isLoading === WriteStatus.LOADING || $isLoading === WriteStatus.error}
 	class={cn(className)}
 	{...$$restProps}
 >
-	{#if isLoading}
+	{#if $isLoading === WriteStatus.LOADING}
 		<IconSpinner class="mr-2 animate-spin" />
 	{:else if showGithubIcon}
 		<IconGitHub class="mr-2" />

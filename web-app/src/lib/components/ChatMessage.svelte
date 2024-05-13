@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ChatMessageActions from '$lib/components/ChatMessageActions.svelte';
-	import { IconOpenAI, IconUser } from '$lib/components/ui/icons';
+	import { IconDownload, IconOpenAI, IconUser } from '$lib/components/ui/icons';
 	import { cn } from '$lib/utils';
 	import type { Message } from 'ai';
 	import type { Post } from '../../stores/posts';
@@ -8,8 +8,13 @@
 	import { Card } from 'flowbite-svelte';
 	import { CodeBlock } from 'svhighlight';
 	import { BASE_URL } from '$lib/smartfileclient';
+	import { onMount } from 'svelte';
 
 	export let message: Post;
+
+	onMount(() => {
+		console.log('CHANGE', message);
+	});
 
 	function truncate(text: string, totalChars: number, endChars = 0) {
 		endChars = Math.min(endChars, totalChars);
@@ -36,9 +41,11 @@
 		}
 	}
 
-	function formatMessage(message: string) {
+	function formatMessage(messages: any[]) {
 		// let content = message.replace("\n", "</br>")
-		let content = message
+		let content = messages
+			.map((el) => el.content)
+			.join('')
 			.split('\n')
 			.map((line) => {
 				if (line.startsWith('Action: ') || line.startsWith('Action Input: ')) {
@@ -54,6 +61,29 @@
 			.join('\n');
 
 		return content;
+	}
+
+	function process_output(output: string) {
+		let result = '';
+		let stdout = output.match(/STDOUT:\n(.*?)STDERR/s);
+		let stderr = output.match(/STDERR:\n(.*?)Return Code/s);
+		if (stdout) {
+			result = stdout[1] + '\n';
+		}
+		if (stderr) {
+			result += stderr[1] + '\n';
+		}
+
+		result = result.replaceAll(/^None$/g, '').trim();
+
+		if ((result = '')) {
+			result = 'No output';
+		}
+
+		if (result.length > 1000) {
+			result = result.substring(0, 996) + '...';
+		}
+		return result;
 	}
 </script>
 
@@ -71,7 +101,7 @@
 		{/if}
 	</div>
 	<div class="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-		{@html formatMessage(message.content)}
+		{@html formatMessage(message.messages)}
 		{#if message.actions}
 			{#each message.actions as action}
 				<CodeBlock
@@ -80,18 +110,29 @@
 					headerText={getSearchType(action.tool).headerText}
 					showLineNumbers={false}
 				/>
+				{#if message.bash_output && process_output(message.bash_output).length > 0}
+					<div
+						class="text-stone-300 bg-slate-950 p-2 rounded-md font-mono text-sm overflow-x-auto overflow-y-auto"
+					>
+						{process_output(message.bash_output)}
+					</div>
+				{/if}
 			{/each}
 		{/if}
 		{#if message.output && message.files}
+			<!-- Separator -->
+			<div class="h-4 w-4 bg-gray-200 rounded-full"></div>
 			{#each message.files as file}
 				<a target="_blank" href={`${BASE_URL}download/${message.uuid}/${file}`}>
 					<div
-						class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
+						class="flex flex-row justify-center max-w-sm px-4 py-1 w-[min-content] min-w-[200px] bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
 					>
-						<h5 class="mb-2 text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-							{truncate(file, 20)}
+						<h5
+							class="flex-nowrap m-auto mx-auto my-auto text-nowrap leading-9 text-sm font-semibold tracking-tight text-gray-900 dark:text-white"
+						>
+							{truncate(file, 40)}
 						</h5>
-						<p class="mb-3 font-normal text-gray-500 dark:text-gray-400">Click to download</p>
+						<IconDownload class="w-6 h-6 my-2 mx-2" />
 					</div>
 				</a>
 			{/each}

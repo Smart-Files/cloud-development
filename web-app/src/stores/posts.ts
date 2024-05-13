@@ -9,19 +9,23 @@ enum Sender {
 
 export type Post = {
     uuid: string;
-    content: string;
+    messages: { content: string }[];
     files: string[] | File[];
     created_at: string;
     role: Sender;
     actions?: any;
     output?: string;
     steps?: any;
+    bash_output?: string;
 
 }
 
 export type PostStore = {
     chats: {
         [uuid: string]: Post[];
+    },
+    input_files?: {
+        [uuid: string]: File[];
     }
 };
 
@@ -31,6 +35,16 @@ export const files = writable<File[]>([]);
 export const input = writable<string>('');
 
 export const uuid = writable<string>('');
+
+export enum WriteStatus {
+    IDLE = 0,
+    LOADING = 1,
+    WAITING_RESPONSE = 2,
+    DONE = 3,
+    ERROR = 4
+}
+
+export const write_status = writable<WriteStatus>(WriteStatus.IDLE);
 
 export function usePosts() {
     const client = new SmartfileClient();
@@ -51,14 +65,17 @@ export function usePosts() {
         if (files.length > 0) {
             const data = await client.uploadFiles(files);
             if (data.status === "success") {
-                console.log('data', data);
+
+                posts.update(posts => ({ ...posts, input_files: { ...posts.input_files, [getUUID()]: files } }));
             }
         }
 
         // Create a new post object
         let new_post: Post = {
             uuid: getUUID(),
-            content,
+            messages: [
+                { content: content }
+            ],
             files: files,
             created_at: new Date().toISOString(),
             role: Sender.user
@@ -67,8 +84,20 @@ export function usePosts() {
         posts.update(posts => ({ chats: { ...posts.chats, [getUUID()]: [...(posts.chats[getUUID()] || []), new_post] } }));
 
         let response = await client.processRequest(content, getUUID());
-        return response
 
+        console.log('status', response);
+        if (response.status === "completed") {
+            write_status.set(WriteStatus.DONE);
+        }
+        return response
+    }
+
+    async function deleteFile(file: File) {
+        files.update((currentFiles) => currentFiles.filter((f) => f !== file));
+    }
+
+    async function stop() {
+        let response = await client.stop();
     }
 
 
@@ -85,7 +114,7 @@ export function usePosts() {
         return client.getAuthenticated();
     }
 
-    return { subscribe: posts.subscribe, update: posts.update, generate, fetchPosts, getUUID, getAuthenticated }
+    return { deleteFile: deleteFile, stop: stop, subscribe: posts.subscribe, update: posts.update, generate, fetchPosts, getUUID, getAuthenticated }
 }
 
 
