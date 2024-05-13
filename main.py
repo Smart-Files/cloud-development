@@ -1,8 +1,7 @@
 import asyncio
 import json
 from typing import Callable
-from fastapi import FastAPI, Query, Request, UploadFile, File, HTTPException, Form
-from fastapi.responses import FileResponse, StreamingResponse
+import fastapi
 from pydantic import BaseModel
 from fileprocessing import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -29,7 +28,7 @@ origins = [
 ]
 
 
-app = FastAPI()
+app = fastapi.FastAPI()
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -64,7 +63,7 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/validate/")
-async def validate(uuid: str = Query(default=None, description="UUID to validate")):
+async def validate(uuid: str = fastapi.Query(default=None, description="UUID to validate")):
     
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400, "status": "error"}
@@ -77,7 +76,7 @@ async def auth():
     return {"uuid": generated_id, "status": "authenticated"}
 
 @app.post("/upload_files/")
-async def upload_files(uuid: str = Form(...), files: list[UploadFile] = File(...)):
+async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.UploadFile] = fastapi.File(...)):
     """Starts a file upload operation.
     """
 
@@ -110,13 +109,13 @@ async def download_file(uuid: str, file_path: str):
 
     # Prevent directory traversal attack.
     if not secure_path.startswith(os.path.abspath(directory)):
-        raise HTTPException(status_code=400, detail="Invalid file path")
+        raise fastapi.HTTPException(status_code=400, detail="Invalid file path")
 
     # Check if the file exists
     if not os.path.isfile(secure_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        raise fastapi.HTTPException(status_code=404, detail="File not found")
 
-    return FileResponse(secure_path, filename=os.path.basename(secure_path))
+    return fastapi.FileResponse(secure_path, filename=os.path.basename(secure_path))
 
 
 class AIMessageDecoder(json.JSONEncoder):
@@ -155,7 +154,7 @@ async def stop_agent(uuid: Auth):
     
 
 @app.get("/process_request/")
-async def stream_response(query: str = Query(default="", description="Input Query"), uuid: str = Query(default="", description="Operation UUID")):
+async def stream_response(query: str = fastapi.Query(default="", description="Input Query"), uuid: str = fastapi.Query(default="", description="Operation UUID")):
     
     
     logger.info("QUERY: " + query)

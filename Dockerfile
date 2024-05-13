@@ -1,50 +1,14 @@
-# The builder image, used to build the virtual environment
-FROM python:3.11-bookworm AS builder
-
-# Install system dependencies for building Python packages
-RUN apt-get update && apt-get install -y \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    zlib1g-dev \
-    libfontconfig1-dev \
-    libfreetype6-dev \
-    libpng-dev \
-    libtiff5-dev \
-    libjpeg-dev \
-    libharfbuzz-dev \
-    libfribidi-dev \
-    libpq-dev \
-    libgit2-dev \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
-
-# Set environment variables for Python package installations
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
-
-WORKDIR /app
-COPY pyproject.toml /app/
-
-# Install Python dependencies using Poetry
-RUN pip install poetry && \
-    poetry install --no-root && \
-    rm -rf $POETRY_CACHE_DIR /root/.cache/pip
-
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-bookworm AS runtime
 
 WORKDIR /app
-COPY pyproject.toml /app/
 
-RUN pip install fastapi langchain
+COPY pyproject.toml /app/
 
 COPY ./requirements.txt /app/requirements.txt
 
 # Install runtime Python dependencies and remove caches immediately
-RUN pip install -r requirements.txt && \
+RUN pip install -r /app/requirements.txt && \
     rm -rf /root/.cache/pip
 
 # Install runtime system dependencies and clean up in one step
@@ -65,9 +29,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl -o /usr/bin/magick https://imagemagick.org/archive/binaries/magick && \
     chmod +x /usr/bin/magick
 
+# Install Python dependencies
 RUN pip install pysqlite3-binary \
+    fastapi \
+    langchain \
     chromadb \
-    langchain_openai
+    langchain_openai 
 
 # Install Dasel 
 RUN curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o dasel
@@ -77,17 +44,17 @@ RUN mv ./dasel /usr/bin/dasel
 # Install Firebase
 RUN pip install --user firebase-admin
 
-# Copy essential binaries and libraries from the builder stage
-COPY --from=builder /usr/local /usr/local
+# WORKDIR /app
 
 # Set PATH to include the virtual environment's binary directory
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Copy virtual environment including Streamlit
-COPY --from=builder /app/.venv /app/.venv
 
 # Copy the application code
 COPY ./main.py /app/main.py
+COPY ./main.py /app/
+COPY ./main.py /
+COPY ./main.py /main.py
+COPY ./main.py /app/fileprocessing/main.py
+COPY ./main.py /app/fileprocessing/
 RUN mkdir /app/working_dir /app/fileprocessing
 COPY ./db /app/db
 COPY ./fileprocessing/* /app/fileprocessing/
@@ -95,6 +62,11 @@ RUN mkdir /app/fileprocessing/llm_docs
 COPY ./fileprocessing/llm_docs/* /app/fileprocessing/llm_docs/
 COPY ./fileprocessing/agent_tools/* /app/fileprocessing/agent_tools/
 
+RUN touch /app/__init__.py
+
+
+
 EXPOSE 8080
+# WORKDIR /app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
-# uvicorn main:app --host 0.0.0.0 --port 8080
+# uvicorn app.main:app --host 0.0.0.0 --port 8080
