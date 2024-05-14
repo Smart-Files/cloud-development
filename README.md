@@ -1,54 +1,38 @@
-# SmartFile File Processing
+# create-svelte
 
+Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
 
+## Creating a project
 
-## Setting up Developer Environment
+If you're seeing this, you've probably already done this step. Congrats!
 
-### Using **pipenv**
+```bash
+# create a new project in the current directory
+npm create svelte@latest
 
-> Since this project will later be deployed on Docker, we use **pipenv** to virtualize and manage dependencies to prevent later conflict. All development and testing should be carried out in the **pipenv** virtual environment.
-
-
-Installing **pipenv** globally (Python installation required)
-```sh
-pip install pipenv --user
+# create a new project in my-app
+npm create svelte@latest my-app
 ```
 
+## Developing
 
-Installing packages from existing project with `requirements.txt`:
-```sh
-pipenv install
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+
+```bash
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
 
+## Building
 
-Activating the virtual environment
-```sh
-pipenv shell
+To create a production version of your app:
+
+```bash
+npm run build
 ```
 
-Installing specific packages
-```sh
-pipenv install <package>
-```
+You can preview the production build with `npm run preview`.
 
-
-It's also possible to update out-of-date packages
-```sh
-pipenv update
-```
-
-### Setting up environment variables
-
-> Since we are using the openrouter.ai API for testing our system, we will need to use an API key. We will use a .env file to store our API key. **pipenv** will automatically import variables from `.env` into the environment variables.
-
-Create a file named `.env` in the main repository directory and add the following
-```sh
-OPENROUTER_API_KEY=your-api-key
-```
-
-Using the API key within a Python program
-```py
-import os
-API_KEY = os.getenv('OPENROUTER_API_KEY')
-print(API_KEY) # your-api-key
-```
+> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
