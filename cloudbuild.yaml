@@ -1,16 +1,10 @@
 steps:
     # Build the container image
     - name: "gcr.io/cloud-builders/docker"
-      args:
-          [
-              "build",
-              "-t",
-              "gcr.io/smartfile-422907/smartfile_build_10:latest",
-              ".",
-          ]
+      args: ["build", "-t", "gcr.io/smartfile-422907/smartfile_dev", "."]
     # Push the container image to Container Registry
     - name: "gcr.io/cloud-builders/docker"
-      args: ["push", "gcr.io/smartfile-422907/smartfile_build_10:latest"]
+      args: ["push", "gcr.io/smartfile-422907/smartfile_dev"]
     # Deploy container image to Cloud Run
     - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
       entrypoint: gcloud
@@ -20,9 +14,9 @@ steps:
               "deploy",
               "smartfile-dev",
               "--image",
-              "gcr.io/smartfile-422907/smartfile_build_10:latest",
+              "gcr.io/smartfile-422907/smartfile_dev",
               "--region",
               "us-central1",
           ]
 images:
-    - gcr.io/smartfile-422907/smartfile_build_10:latest
+    - gcr.io/smartfile-422907/smartfile_dev
