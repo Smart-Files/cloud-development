@@ -1,9 +1,0 @@
-langchain
-langchain-openai
-python-dotenv
-fpdf
-Pillow
-fastapi
-langchain-core
-uvicorn
-langchain

@@ -8,6 +8,7 @@ project_name="smartfile-422907"
 build_name="smartfile_build_10"
 gcloud_run_service_name="smartfile-dev"
 
+
 # Use project and app names in commands
 docker_image_tag="gcr.io/$project_name/$build_name:latest"
 gcloud_run_region="us-central1"

@@ -2,8 +2,8 @@ version: '3'
 services:
   smartfile-chat-app:
     image: smartfile-chat-app:latest
-    build: ./app
-    command:  uvicorn main:app --host 0.0.0.0 --port 8080
+    build: /cloud
+    command: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
     volumes:
     - ./:/app
     ports:

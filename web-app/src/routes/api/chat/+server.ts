@@ -11,7 +11,7 @@ import { env } from '$env/dynamic/private';
 
 import type { RequestHandler } from './$types';
 
-const BASE_URL = "http://localhost:8000/";
+const BASE_URL = "https://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/";
 
 export const config: Config = {
 	runtime: 'edge'

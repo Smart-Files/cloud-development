@@ -16,7 +16,7 @@ import { db } from "./firestore";
 import { get } from "svelte/store";
 import { P } from "flowbite-svelte";
 
-export const BASE_URL = "http://localhost:8080/"
+export const BASE_URL = "http://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/"
 
 export default class SmartfileClient {
     uuid: string;

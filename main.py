@@ -3,7 +3,7 @@ import json
 from typing import Callable
 import fastapi
 from pydantic import BaseModel
-from fileprocessing import tools_agent
+from cloud import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from langchain_core.messages.ai import AIMessage
 from langchain.memory.buffer import ConversationBufferMemory
@@ -16,8 +16,9 @@ import uuid
 import os
 import shutil
 from fastapi.middleware.cors import CORSMiddleware
-from fileprocessing.firestore import db, app
+from cloud.firestore import db, app
 from firebase_admin import firestore
+import uvicorn
 
 
 origins = [
@@ -214,6 +215,10 @@ async def stream_response(query: str = fastapi.Query(default="", description="In
 
         process_doc.set({"chunk_count": firestore.Increment(1), "chunks": firestore.ArrayUnion([result])})
 
+async def main():
+    config = uvicorn.Config("main:app", port=8080, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
 
 if __name__ == "__main__":
-    asyncio.run(init_agent())
+     asyncio.run(main())
