@@ -1,0 +1,3 @@
+# constraints.txt
+packaging==23.2
+pyparsing==3.1.1

@@ -1,100 +1,93 @@
-# The builder image, used to build the virtual environment
-FROM python:3.11-bookworm AS builder
+FROM python:3.10-slim
+# RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-# Install system dependencies for building Python packages
-RUN apt-get update && apt-get install -y \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    zlib1g-dev \
-    libfontconfig1-dev \
-    libfreetype6-dev \
-    libpng-dev \
-    libtiff5-dev \
-    libjpeg-dev \
-    libharfbuzz-dev \
-    libfribidi-dev \
-    libpq-dev \
-    libgit2-dev \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /cloud
 
-# Set environment variables for Python package installations
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
 
-WORKDIR /app
-COPY pyproject.toml /app/
+# RUN apt update && apt install b÷ild-essential software-properties-common -y
 
-# Install Python dependencies using Poetry
-RUN pip install poetry && \
-    poetry install --no-root && \
-    rm -rf $POETRY_CACHE_DIR /root/.cache/pip
+# RUN add-apt-repository ppa:deadsnakes/ppa
 
-# The runtime image, used to just run the code provided its virtual environment
-FROM python:3.11-slim-bookworm AS runtime
 
-WORKDIR /app
-COPY pyproject.toml /app/
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     libpython3.11-dev \
+#     python3.11-dev \
+#     python3.11-venv \
+#     python3.11-distutils \
+#     python3.11 \
+#     python3.11-full \
+#     python3-pip
 
-RUN pip install fastapi langchain
+# RUN ls -la /usr/bin
+# RUN ls -la /usr/local/bin
 
-COPY ./requirements.txt /app/requirements.txt
 
-# Install runtime Python dependencies and remove caches immediately
-RUN pip install -r requirements.txt && \
-    rm -rf /root/.cache/pip
 
-# Install runtime system dependencies and clean up in one step
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y software-properties-common \
+    wget \
+    curl \
+    imagemagick \
     ffmpeg \
     gdal-bin \
-    curl \
     pandoc \
-    imagemagick \
     libmagickwand-dev \
     poppler-utils \
     fuse \
     libfuse2 \
     sqlite3 \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
 
-RUN curl -o /usr/bin/magick https://imagemagick.org/archive/binaries/magick && \
-    chmod +x /usr/bin/magick
+# Install dasel
+RUN curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o /usr/bin/dasel && \
+    chmod +x /usr/bin/dasel && \
+    rm -rf /var/lib/apt/lists/* /root/.cache
 
-RUN pip install pysqlite3-binary \
+# RUN add-apt-repository ppa:deadsnakes/ppa && apt update && apt install -y python3.11 python3.11-distutils && apt clean
+# RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+
+# Download and install Python 3.11
+# RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz && \
+#     tar xzf Python-3.11.0.tgz && \
+#     cd Python-3.11.0 && \
+#     ./configure --enable-optimizations && \
+#     make -j 4 && \
+#     make altinstall && \
+#     cd .. && \
+#     rm -rf Python-3.11.0* 
+
+# Install Poetry
+# RUN curl -sSL https://install.python-poetry.org | python3.11 -
+
+WORKDIR /code
+RUN touch README.md
+
+ENV PATH="${PATH}:/root/.local/bin"
+
+
+# RUN python3.11 -m venv /code/venv
+
+# Install dependencies without a virtual environment
+RUN pip install --user fastapi langchain-core \
+    langchain \
+    pysqlite3-binary \
     chromadb \
-    langchain_openai
+    langchain-openai \
+    firebase-admin \
+    ffmpeg \
+    pandoc \
+    python-dotenv \
+    langchain-chroma \
+    uvicorn \
+    langchainhub
 
-# Install Dasel 
-RUN curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o dasel
-RUN chmod +x dasel
-RUN mv ./dasel /usr/bin/dasel
-
-# Install Firebase
-RUN pip install --user firebase-admin
-
-# Copy essential binaries and libraries from the builder stage
-COPY --from=builder /usr/local /usr/local
-
-# Set PATH to include the virtual environment's binary directory
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Copy virtual environment including Streamlit
-COPY --from=builder /app/.venv /app/.venv
-
-# Copy the application code
-COPY ./main.py /app/main.py
-RUN mkdir /app/working_dir /app/fileprocessing
-COPY ./db /app/db
-COPY ./fileprocessing/* /app/fileprocessing/
-RUN mkdir /app/fileprocessing/llm_docs
-COPY ./fileprocessing/llm_docs/* /app/fileprocessing/llm_docs/
-COPY ./fileprocessing/agent_tools/* /app/fileprocessing/agent_tools/
+COPY . /code/
+COPY project /code/project
 
 EXPOSE 8080
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
-# uvicorn main:app --host 0.0.0.0 --port 8080
+
+CMD HOME=/code
+
+ENTRYPOINT ["python", "-m", "project.app"]
+
