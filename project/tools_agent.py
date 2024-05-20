@@ -1,6 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import Tool
 from langchain import hub
+from langchain.prompts.base import BasePromptTemplate
 from langchain.agents import AgentExecutor, create_react_agent
 import subprocess
 from langchain.document_loaders.markdown import UnstructuredMarkdownLoader
@@ -21,7 +22,9 @@ import os
 from dotenv import load_dotenv
 import asyncio
 
-load_dotenv()
+
+
+load_dotenv("/keys/.env")
 PERSIST_DIR = 'db'
 
 file_tool = None
@@ -94,13 +97,14 @@ def load_documents_db(directory: str):
 
     return vectordb
 
-    
-
-async def init_tools_agent(uuid: str) -> AgentExecutor:
-    global file_tool
-    """
+"""
     Generates tools and prompts and return them along with the preferred model
-    """
+
+    Returns {"llm": llm_llama3, "tools": tools, "prompt": prompt}
+""" 
+async def init_tools_agent(uuid: str) -> dict[str, dict[ChatOpenAI, list[Tool], BasePromptTemplate]]:
+    global file_tool
+    
     prompt = hub.pull("hwchase17/react")
 
     if file_tool is None:
@@ -125,12 +129,3 @@ async def init_tools_agent(uuid: str) -> AgentExecutor:
 
     return {"llm": llm_llama3, "tools": tools, "prompt": prompt}
     
-if __name__ == "__main__":
-    input = ""
-    asyncio.run(init_tools_agent(llm_llama3, input, "mathoutput.pdf"))
-    # init_tools_agent(llm_llama3_8b, input, "llama8b.pdf")
-    # init_tools_agent(llm_codellama, input, "codellama.png")
-    # init_tools_agent(llm_mixtral22, input, "mixtral.png")
-    # init_tools_agent(llm_palm2, input, "palm2.png")
-    # init_tools_agent(llm_qwen, input, "qwen.png")
-    print("Done!")

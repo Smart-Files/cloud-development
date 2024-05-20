@@ -69,13 +69,14 @@ ENV PATH="${PATH}:/root/.local/bin"
 # RUN python3.11 -m venv /code/venv
 
 # Install dependencies without a virtual environment
-RUN pip install --user fastapi langchain-core \
+RUN pip install --user --no-cache-dir fastapi langchain-core \
     langchain \
     pysqlite3-binary \
     chromadb \
     langchain-openai \
     firebase-admin \
     ffmpeg \
+    aiohttp \
     pandoc \
     python-dotenv \
     langchain-chroma \
