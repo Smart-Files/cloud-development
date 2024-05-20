@@ -5,6 +5,7 @@ import fastapi
 from pydantic import BaseModel
 from project import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.cors import CORSMiddleware as CORSMiddleware
 from langchain_core.messages.ai import AIMessage
 from langchain.memory.buffer import ConversationBufferMemory
 
@@ -15,14 +16,12 @@ import logging
 import uuid
 import os
 import shutil
-from fastapi.middleware.cors import CORSMiddleware
-from project.firestore import db, app
+from project.firestore import db, firestore_app
 from firebase_admin import firestore
 import uvicorn
+import dotenv
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+dotenv.load_dotenv("/keys/.env")
 
 BASE_DIR = "/app"
 
@@ -34,25 +33,10 @@ DATABASES = {
 }
 
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-    "https://localhost",
-    "https://localhost:5173"
-]
-
-
 app = fastapi.FastAPI()
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -72,6 +56,8 @@ connected_uuids = {}
 #     response = await call_next(request)
 #     return response
 
+# gcloud api-gateway api-configs create server_config --api=server --openapi-spec=openapi.yaml --project=smartfile-422907 --backend-auth-service-account=docker-build-neil-331@smartfile-422907.iam.gserviceaccount.com
+
 @app.get("/") 
 async def root():
     return {"message": "Hello World"}
@@ -83,13 +69,23 @@ async def validate(uuid: str = fastapi.Query(default=None, description="UUID to 
         return {"error": "Forbidden: invalid uuid provided", "code": 400, "status": "error"}
     return {"uuid": uuid, "status": "authenticated"}
 
-@app.post("/auth/")
+@app.get("/authenticate")
 async def auth():
     generated_id = str(uuid.uuid4())
     connected_uuids[generated_id] = True
     return {"uuid": generated_id, "status": "authenticated"}
 
-@app.post("/upload_files/")
+@app.options("/upload_files/")
+async def upload_files_preflight():
+    headers = {
+        "Access-Control-Allow-Origin": "https://smartfile-422907.web.app/",  # Adjust as per your CORS policy
+        "Access-Control-Allow-Methods": "PUT, POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    }
+    return fastapi.Response(status_code=fastapi.status.HTTP_200_OK, headers=headers)
+
+
+@app.put("/upload_files/")
 async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.UploadFile] = fastapi.File(...)):
     """Starts a file upload operation.
     """
@@ -157,7 +153,7 @@ def get_agent_executor(uuid: str):
     return agent_executors.get(uuid, None)
 
 @app.post("/stop")
-async def stop_agent(uuid: Auth):
+async def stop_agent(uuid: Auth = fastapi.Form(...)):
     uuid = uuid.uuid
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
@@ -228,5 +224,17 @@ async def stream_response(query: str = fastapi.Query(default="", description="In
 
         process_doc.set({"chunk_count": firestore.Increment(1), "chunks": firestore.ArrayUnion([result])})
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://smartfile-422907.web.app/"],
+    allow_credentials=True,
+    allow_methods=["DELETE", "GET", "POST", "PUT"],
+    allow_headers=["*"],
+)
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+    backend_host = "0.0.0.0"
+    backend_port = 8080
+
+    uvicorn.run(app, host=backend_host, port=backend_port, log_level="info", proxy_headers=True, server_header=False, headers=[("Access-Control-Allow-Origin", "https://smartfile-422907.web.app")])

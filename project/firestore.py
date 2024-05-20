@@ -6,11 +6,11 @@ import os
 
 
 cred = None
-app = None
+firestore_app = None
 db = None
 
 
-if os.path.exists('smartfile-account.json'):
-    cred = credentials.Certificate('smartfile-account.json')
-    app = firebase_admin.initialize_app(cred)
+if os.path.exists('/firebase/firebase_service_account.json'):
+    cred = credentials.Certificate('/firebase/firebase_service_account.json')
+    firestore_app = firebase_admin.initialize_app(cred)
     db = firestore.client()

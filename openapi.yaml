@@ -1,0 +1,220 @@
+swagger: "2.0"
+info:
+    title: FastAPI
+    version: "0.1.0"
+schemes:
+    - "https"
+paths:
+    "/":
+        get:
+            summary: "Root"
+            operationId: "root__get"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+    "/validate":
+        get:
+            summary: "Validate"
+            operationId: "validate_validate__get"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            parameters:
+                - name: "uuid"
+                  in: "query"
+                  description: "UUID to validate"
+                  required: false
+                  type: string
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+                422:
+                    description: "Validation Error"
+                    schema:
+                        $ref: "#/definitions/HTTPValidationError"
+            security:
+                - api_key: []
+    "/authenticate":
+        get:
+            summary: "Auth"
+            operationId: "auth_authenticate_get"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+            security:
+                - api_key: []
+    "/upload_files":
+        post:
+            summary: "Upload Files"
+            description: "Starts a file upload operation."
+            operationId: "upload_files_upload_files__post"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            parameters:
+                - name: "Body_upload_files_upload_files__post"
+                  in: "body"
+                  required: true
+                  schema:
+                      $ref: "#/definitions/Body_upload_files_upload_files__post"
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+                422:
+                    description: "Validation Error"
+                    schema:
+                        $ref: "#/definitions/HTTPValidationError"
+            security:
+                - api_key: []
+    "/download/{uuid}/{file_path}":
+        get:
+            summary: "Download File"
+            operationId: "download_file_download__uuid___file_path__get"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            parameters:
+                - name: "uuid"
+                  in: "path"
+                  required: true
+                  type: string
+                - name: "file_path"
+                  in: "path"
+                  required: true
+                  type: string
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+                422:
+                    description: "Validation Error"
+                    schema:
+                        $ref: "#/definitions/HTTPValidationError"
+            security:
+                - api_key: []
+    "/stop":
+        post:
+            summary: "Stop Agent"
+            operationId: "stop_agent_stop_post"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            parameters:
+                - name: "Body_stop_agent_stop_post"
+                  in: "body"
+                  required: true
+                  schema:
+                      $ref: "#/definitions/Body_stop_agent_stop_post"
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+                422:
+                    description: "Validation Error"
+                    schema:
+                        $ref: "#/definitions/HTTPValidationError"
+            security:
+                - api_key: []
+    "/process_request":
+        get:
+            summary: "Stream Response"
+            operationId: "stream_response_process_request__get"
+            x-google-backend:
+                address: "http://0.0.0.0:8080"
+            parameters:
+                - name: "query"
+                  in: "query"
+                  description: "Input Query"
+                  required: false
+                  type: string
+                  default: ""
+                - name: "uuid"
+                  in: "query"
+                  description: "Operation UUID"
+                  required: false
+                  type: string
+                  default: ""
+            responses:
+                200:
+                    description: "Successful Response"
+                    schema:
+                        type: object
+                422:
+                    description: "Validation Error"
+                    schema:
+                        $ref: "#/definitions/HTTPValidationError"
+            security:
+                - api_key: []
+definitions:
+    Auth:
+        type: object
+        required:
+            - uuid
+        properties:
+            uuid:
+                type: string
+                title: "Uuid"
+    Body_stop_agent_stop_post:
+        type: object
+        required:
+            - uuid
+        properties:
+            uuid:
+                $ref: "#/definitions/Auth"
+    Body_upload_files_upload_files__post:
+        type: object
+        required:
+            - uuid
+            - files
+        properties:
+            uuid:
+                type: string
+                title: "Uuid"
+            files:
+                type: array
+                items:
+                    type: string
+                    format: binary
+                title: "Files"
+    HTTPValidationError:
+        type: object
+        title: "HTTPValidationError"
+        properties:
+            detail:
+                type: array
+                title: "Detail"
+                items:
+                    $ref: "#/definitions/ValidationError"
+    ValidationError:
+        type: object
+        required:
+            - loc
+            - msg
+            - type
+        properties:
+            loc:
+                type: array
+                title: "Location"
+                items:
+                    type: string
+            msg:
+                type: string
+                title: "Message"
+            type:
+                type: string
+                title: "Error Type"
+securityDefinitions:
+    api_key:
+        type: apiKey
+        name: key
+        in: query
