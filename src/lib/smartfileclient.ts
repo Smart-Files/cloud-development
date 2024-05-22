@@ -13,10 +13,11 @@
 import { QuerySnapshot, collection, doc, getDoc, onSnapshot, query as qref, where, type DocumentChange, DocumentSnapshot } from "firebase/firestore";
 import { posts, type Post, write_status, WriteStatus, files as files_store } from "../stores/posts";
 import { db } from "./firestore";
-import { get } from "svelte/store";
-import { P } from "flowbite-svelte";
+const { MODE } = import.meta.env;
+import { get, writable } from "svelte/store";
+import axios from "axios";
 
-export const BASE_URL = "http://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/"
+export const BASE_URL = MODE == "development" ? "http://localhost:8080/" : "https://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/"
 
 export default class SmartfileClient {
     uuid: string;
@@ -29,12 +30,7 @@ export default class SmartfileClient {
 
     private async requestNewUUID() {
         console.log("Requesting new UUID")
-        let response: Response = await fetch(BASE_URL + "auth", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
+        let response: Response = await fetch(BASE_URL + "authenticate");
         let json = await response.json();
         return json ? json.uuid : "";
     }
@@ -76,6 +72,8 @@ export default class SmartfileClient {
             }
         }
 
+        const fileProgress = writable(0)
+
         let formData = new FormData();
         formData.append('uuid', this.uuid);
 
@@ -89,24 +87,27 @@ export default class SmartfileClient {
             formData.append('files', fileWithSafeName);
         });
 
-        let response = await fetch(BASE_URL + "upload_files", {
-            method: 'POST',
-            body: formData
-        });
+        // let response = await fetch("/api/upload-files", {
+        //     method: 'POST',
+        //     body: formData
+        // });
+
+        let response = await axios.post("/api/upload-files", formData, {
+            onUploadProgress: (progressEvent) => {
+                fileProgress.set(progressEvent.loaded / (progressEvent.total || 1));
+            }
+        })
 
         files_store.set(files);
 
-
-
-        let json = await response.json();
-        return json;
+        let json = await response.data;
+        return { ...json, fileProgress };
     }
 
 
 
     // Use EventSource to begin process and listen for updates
     private async beginProcess(query: string, uuid: string) {
-        const url = `${BASE_URL}process_request?query=${query}&uuid=${uuid}`;
         // Subscribe to Firestore updates for this UUID
         let processDoc = doc(db, "process", uuid)
         let eventsRef = collection(processDoc, "events")
@@ -158,10 +159,19 @@ export default class SmartfileClient {
             }
         });
 
-        write_status.set(WriteStatus.loading);
+        write_status.set(WriteStatus.LOADING);
 
 
-        let result = await fetch(url);
+        const formData = new FormData();
+        formData.append('query', query);
+        formData.append('uuid', uuid);
+
+        const url = MODE == "development" ? "http://localhost:8080/process_request" : "/api/process-request"
+
+        let result = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
 
         return result
 
