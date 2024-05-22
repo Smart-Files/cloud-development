@@ -8,15 +8,14 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.cors import CORSMiddleware as CORSMiddleware
 from langchain_core.messages.ai import AIMessage
 from langchain.memory.buffer import ConversationBufferMemory
-
-
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.agents import AgentAction, AgentStep, HumanMessage
-import logging
+
 import uuid
 import os
 import shutil
 from project.firestore import db, firestore_app
+from project.logger import logger
 from firebase_admin import firestore
 import uvicorn
 import dotenv
@@ -37,14 +36,6 @@ app = fastapi.FastAPI()
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()  # Create console handler
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 # Replace with persistent cross-system store
 connected_uuids = {}
@@ -85,7 +76,7 @@ async def upload_files_preflight():
     return fastapi.Response(status_code=fastapi.status.HTTP_200_OK, headers=headers)
 
 
-@app.put("/upload_files/")
+@app.post("/upload_files/")
 async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.UploadFile] = fastapi.File(...)):
     """Starts a file upload operation.
     """
@@ -93,7 +84,7 @@ async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.Upload
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
 
-    file_dir = os.path.join("/app/working_dir", uuid)
+    file_dir = os.path.join("/working_dir", uuid)
     os.makedirs(file_dir, exist_ok=True)
 
     for file in files:
@@ -111,7 +102,7 @@ async def download_file(uuid: str, file_path: str):
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
     # Define the directory where your files are stored
-    directory =os.path.join("/app/working_dir", uuid)
+    directory =os.path.join("/working_dir", uuid)
     
     full_path = os.path.join(directory, file_path)
     # Ensure the directory traversal is secure
@@ -163,20 +154,23 @@ async def stop_agent(uuid: Auth = fastapi.Form(...)):
 
     
 
-@app.get("/process_request/")
-async def stream_response(query: str = fastapi.Query(default="", description="Input Query"), uuid: str = fastapi.Query(default="", description="Operation UUID")):
-    
-    
+@app.post("/process_request/")
+async def stream_response(uuid: str = fastapi.Form(...), query: str = fastapi.Form(...)):
+    """Starts a file processing operation
+    """
+
     logger.info("QUERY: " + query)
     logger.info("UUID: " + uuid)
     logger.info("CONNECTED UUIDS: " + str(connected_uuids))
+
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
-    file_dir = os.path.join("/app/working_dir", uuid)
+    file_dir = os.path.join("/working_dir", uuid)
 
     os.makedirs(file_dir, exist_ok=True)
     
+    # Creates agent
     agent_config = await tools_agent.init_tools_agent(uuid)
     agent = create_react_agent(agent_config["llm"], agent_config["tools"], agent_config["prompt"])
     agent_executor = AgentExecutor(agent=agent, 
@@ -199,14 +193,14 @@ async def stream_response(query: str = fastapi.Query(default="", description="In
             .collection("events")
     
     events_ref.document() \
-        .set({"status": "started", "input_files": os.listdir(file_dir), "query": query})
+        .set({"status": "started", "input_files": input_files, "query": query})
 
     metadata_doc = process_doc \
         .collection("events") \
         .document("metadata")
     
 
-    process_doc.set({"status": "started", "input_files": os.listdir(file_dir), "query": query, "chunks": [], "chunk_count": 0})
+    process_doc.set({"status": "started", "input_files": input_files, "query": query, "chunks": [], "chunk_count": 0})
 
     async for result in agent_executor.astream({"input": f"{query}.\n\n{'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"}):
         logger.info("RESULT: " + str(result))
