@@ -2,7 +2,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { IconGitHub, IconSpinner } from '$lib/components/ui/icons';
 	import { cn } from '$lib/utils';
-	import { signIn } from '@auth/sveltekit/client';
 	import type { Writable } from 'svelte/store';
 	import { WriteStatus } from '../../stores/posts';
 
@@ -19,7 +18,7 @@
 	variant="outline"
 	on:click={() => {
 		// isLoading.set(true);
-		signIn('github', { callbackUrl: `/` });
+		// signIn('github', { callbackUrl: `/` });
 	}}
 	disabled={$isLoading === WriteStatus.LOADING || $isLoading === WriteStatus.error}
 	class={cn(className)}
