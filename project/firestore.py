@@ -1,5 +1,5 @@
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore_async as firestore
 from project.logger import logger
 import os
 
@@ -10,11 +10,13 @@ db = None
 
 
 if os.path.exists('/firebase/firebase_service_account.json'):
-    logger.info('Firebase service account found, initializing Firestore...')
+    logger.info('Firebase production service account found, initializing Firestore...')
     cred = credentials.Certificate('/firebase/firebase_service_account.json')
     firestore_app = firebase_admin.initialize_app(cred)
     db = firestore.client(firestore_app)
-else:
-    logger.warning('Firebase service account not found, Firestore not initialized.')
-    logger.info('Directory contents: %s', os.listdir('/firebase'))
+elif os.path.exists("firebase_service_account.json"):
+    logger.warning('Firebase local service account found, Firestore initializing...')
+    cred = credentials.Certificate('firebase_service_account.json')
+    firestore_app = firebase_admin.initialize_app(cred)
+    db = firestore.client(firestore_app)
 

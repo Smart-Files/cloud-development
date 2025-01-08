@@ -1,0 +1,396 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvsql.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvsql.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvsql">
+            <h1>
+                csvsql<a
+                    class="headerlink"
+                    href="#csvsql"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Generate SQL statements for a CSV file or execute those
+                    statements directly on a database. In the latter case
+                    supports both creating tables and inserting data:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: csvsql [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+          [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]
+          [-S] [--blanks] [--null-value NULL_VALUES [NULL_VALUES ...]]
+          [--date-format DATE_FORMAT] [--datetime-format DATETIME_FORMAT]
+          [-H] [-K SKIP_LINES] [-v] [-l] [--zero] [-V]
+          [-i {firebird,mssql,mysql,oracle,postgresql,sqlite,sybase}]
+          [--db CONNECTION_STRING] [--query QUERIES] [--insert]
+          [--prefix PREFIX] [--before-insert BEFORE_INSERT]
+          [--after-insert AFTER_INSERT] [--tables TABLE_NAMES]
+          [--no-constraints] [--unique-constraint UNIQUE_CONSTRAINT]
+          [--no-create] [--create-if-not-exists] [--overwrite]
+          [--db-schema DB_SCHEMA] [-y SNIFF_LIMIT] [-I]
+          [--chunk-size CHUNK_SIZE]
+          [FILE [FILE ...]]
+
+Generate SQL statements for one or more CSV files, or execute those statements
+directly on a database, and execute one or more SQL queries.
+
+positional arguments:
+FILE                  The CSV file(s) to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+-i {firebird,mssql,mysql,oracle,postgresql,sqlite,sybase,crate}, --dialect {firebird,mssql,mysql,oracle,postgresql,sqlite,sybase,crate}
+                    Dialect of SQL to generate. Cannot be used with --db.
+--db CONNECTION_STRING
+                    If present, a SQLAlchemy connection string to use to
+                    directly execute generated SQL on a database.
+--query QUERY         Execute one or more SQL queries delimited by ";" and
+                    output the result of the last query as CSV. QUERY may
+                    be a filename.
+--insert              Insert the data into the table. Requires --db.
+--prefix PREFIX       Add an expression following the INSERT keyword, like
+                    OR IGNORE or OR REPLACE.
+--before-insert BEFORE_INSERT
+                    Execute SQL before the INSERT command. Requires
+                    --insert.
+--after-insert AFTER_INSERT
+                    Execute SQL after the INSERT command. Requires
+                    --insert.
+--tables TABLE_NAMES  A comma-separated list of names of tables to be
+                    created. By default, the tables will be named after
+                    the filenames without extensions or "stdin".
+--no-constraints      Generate a schema without length limits or null
+                    checks. Useful when sampling big tables.
+--unique-constraint UNIQUE_CONSTRAINT
+                    A column-separated list of names of columns to include
+                    in a UNIQUE constraint.
+--no-create           Skip creating the table. Requires --insert.
+--create-if-not-exists
+                    Create the table if it does not exist, otherwise keep
+                    going. Requires --insert.
+--overwrite           Drop the table if it already exists. Requires
+                    --insert. Cannot be used with --no-create.
+--db-schema DB_SCHEMA
+                    Optional name of database schema to create table(s)
+                    in.
+-y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT
+                    Limit CSV dialect sniffing to the specified number of
+                    bytes. Specify "0" to disable sniffing.
+-I, --no-inference    Disable type inference when parsing the input.
+--chunk-size CHUNK_SIZE
+                    Chunk size for batch insert into the table. Requires
+                    --insert.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+                <p>
+                    For information on connection strings and supported dialects
+                    refer to the
+                    <a
+                        class="reference external"
+                        href="https://www.sqlalchemy.org/docs/dialects/"
+                        >SQLAlchemy documentation</a
+                    >.
+                </p>
+                <p>
+                    If you prefer not to enter your password in the connection
+                    string, store the password securely in a
+                    <a
+                        class="reference external"
+                        href="https://www.postgresql.org/docs/9.1/static/libpq-pgpass.html"
+                        >PostgreSQL Password File</a
+                    >, a
+                    <a
+                        class="reference external"
+                        href="https://dev.mysql.com/doc/refman/5.7/en/option-files.html"
+                        >MySQL Options File</a
+                    >
+                    or similar files for other systems.
+                </p>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        Using the
+                        <code class="code docutils literal notranslate"
+                            ><span class="pre">--query</span></code
+                        >
+                        option may cause rounding (in Python 2) or introduce
+                        <a
+                            class="reference external"
+                            href="https://docs.python.org/3/tutorial/floatingpoint.html"
+                            >Python floating point issues</a
+                        >
+                        (in Python 3).
+                    </p>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        If the CSV file was created from a JSON file using
+                        <a class="reference internal" href="in2csv.html"
+                            ><span class="doc">in2csv</span></a
+                        >, remember to quote SQL columns properly. For example:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">'{"a":{"b":"c"},"d":"e"}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>in2csv<span class="w"> </span>-f<span class="w"> </span>ndjson<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s1">'SELECT "a/b" FROM stdin'</span>
+</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        Alternatives to
+                        <a class="reference internal" href="#"
+                            ><span class="doc">csvsql</span></a
+                        >
+                        are
+                        <a
+                            class="reference external"
+                            href="https://github.com/harelba/q"
+                            >q</a
+                        >
+                        and
+                        <a
+                            class="reference external"
+                            href="https://github.com/dinedal/textql"
+                            >textql</a
+                        >.
+                    </p>
+                </div>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <section id="generate-sql-statements">
+                    <h3>
+                        Generate SQL statements<a
+                            class="headerlink"
+                            href="#generate-sql-statements"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>Generate a statement in the PostgreSQL dialect:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>-i<span class="w"> </span>postgresql<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                        </div>
+                    </div>
+                </section>
+                <section id="interact-with-a-sql-database">
+                    <h3>
+                        Interact with a SQL database<a
+                            class="headerlink"
+                            href="#interact-with-a-sql-database"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>
+                        Create a table and import data from the CSV directly
+                        into PostgreSQL:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>createdb<span class="w"> </span><span class="nb">test</span>
+csvsql<span class="w"> </span>--db<span class="w"> </span>postgresql:///test<span class="w"> </span>--tables<span class="w"> </span>fy09<span class="w"> </span>--insert<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        For large tables it may not be practical to process the
+                        entire table. One solution to this is to analyze a
+                        sample of the table. In this case it can be useful to
+                        turn off length limits and null checks with the
+                        <code class="code docutils literal notranslate"
+                            ><span class="pre">--no-constraints</span></code
+                        >
+                        option:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">20</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvsql<span class="w"> </span>--no-constraints<span class="w"> </span>--tables<span class="w"> </span>fy09
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        Create tables for an entire directory of CSVs and import
+                        data from those files directly into PostgreSQL:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>createdb<span class="w"> </span><span class="nb">test</span>
+csvsql<span class="w"> </span>--db<span class="w"> </span>postgresql:///test<span class="w"> </span>--insert<span class="w"> </span>examples/*_converted.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        If those CSVs have identical headers, you can import
+                        them into the same table by using
+                        <a class="reference internal" href="csvstack.html"
+                            ><span class="doc">csvstack</span></a
+                        >
+                        first:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>createdb<span class="w"> </span><span class="nb">test</span>
+csvstack<span class="w"> </span>examples/dummy?.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvsql<span class="w"> </span>--db<span class="w"> </span>postgresql:///test<span class="w"> </span>--insert
+</pre>
+                        </div>
+                    </div>
+                </section>
+                <section id="query-and-output-csv-files-using-sql">
+                    <h3>
+                        Query and output CSV files using SQL<a
+                            class="headerlink"
+                            href="#query-and-output-csv-files-using-sql"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>
+                        You can use csvsql to “directly” query one or more CSV
+                        files. Please note that this will create an in-memory
+                        SQLite database, so it won’t be very fast:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>--query<span class="w">  </span><span class="s2">"SELECT m.usda_id, avg(i.sepal_length) AS mean_sepal_length FROM iris AS i JOIN irismeta AS m ON (i.species = m.species) GROUP BY m.species"</span><span class="w"> </span>examples/iris.csv<span class="w"> </span>examples/irismeta.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>Group rows by one column:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s2">"SELECT * FROM 'dummy3' GROUP BY a"</span><span class="w"> </span>examples/dummy3.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>Concatenate two columns:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s2">"SELECT a || b FROM 'dummy3'"</span><span class="w"> </span>--no-inference<span class="w"> </span>examples/dummy3.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        If a column contains null values, you must
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">COALESCE</span></code
+                        >
+                        the column:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s2">"SELECT a || COALESCE(b, '') FROM 'sort_ints_nulls'"</span><span class="w"> </span>--no-inference<span class="w"> </span>examples/sort_ints_nulls.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        The
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">UPDATE</span></code
+                        >
+                        SQL statement produces no output. Remember to
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">SELECT</span></code
+                        >
+                        the columns and rows you want:
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s2">"UPDATE 'dummy3' SET a = 'foo'; SELECT * FROM 'dummy3'"</span><span class="w"> </span>examples/dummy3.csv
+</pre>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </article>
+</div>

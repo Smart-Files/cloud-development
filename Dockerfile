@@ -1,32 +1,9 @@
-FROM python:3.10-slim
-# RUN rm /bin/sh && ln -s /bin/bash /bin/sh
-
-WORKDIR /cloud
-
-
-# RUN apt update && apt install b÷ild-essential software-properties-common -y
-
-# RUN add-apt-repository ppa:deadsnakes/ppa
-
-
-# RUN apt-get update && apt-get install -y \
-#     git \
-#     libpython3.11-dev \
-#     python3.11-dev \
-#     python3.11-venv \
-#     python3.11-distutils \
-#     python3.11 \
-#     python3.11-full \
-#     python3-pip
-
-# RUN ls -la /usr/bin
-# RUN ls -la /usr/local/bin
-
-
+FROM python:3.10
 
 RUN apt-get update && apt-get install -y software-properties-common \
     wget \
     curl \
+    exiftool \
     imagemagick \
     ffmpeg \
     gdal-bin \
@@ -34,14 +11,24 @@ RUN apt-get update && apt-get install -y software-properties-common \
     libmagickwand-dev \
     poppler-utils \
     fuse \
+    texlive-latex-base \
+    texlive-latex-extra \
     libfuse2 \
     sqlite3 \
+    zip \
+    unzip \
+    tar \
+    gzip \
+    bzip2 \
+    texlive-fonts-recommended \
+    lmodern \
     --no-install-recommends
-
 # Install dasel
 RUN curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o /usr/bin/dasel && \
     chmod +x /usr/bin/dasel && \
     rm -rf /var/lib/apt/lists/* /root/.cache
+
+RUN ln -s /usr/bin/convert /usr/bin/magick
 
 # RUN add-apt-repository ppa:deadsnakes/ppa && apt update && apt install -y python3.11 python3.11-distutils && apt clean
 # RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
@@ -65,7 +52,6 @@ RUN touch README.md
 
 ENV PATH="${PATH}:/root/.local/bin"
 
-
 # RUN python3.11 -m venv /code/venv
 
 # Install dependencies without a virtual environment
@@ -78,13 +64,22 @@ RUN pip install --user --no-cache-dir fastapi langchain-core \
     ffmpeg \
     aiohttp \
     pandoc \
+    beautifulsoup4 \
+    langchain_pinecone \
+    pinecone-client \
+    langchain-community \
     python-dotenv \
     langchain-chroma \
     uvicorn \
-    langchainhub
+    langchainhub \
+    csvkit \
+    pypdf \
+    langchain_qdrant \
+    python-multipart \
+    watchdog \
+    asyncio
 
 COPY . /code/
-COPY project /code/project
 
 EXPOSE 8080
 

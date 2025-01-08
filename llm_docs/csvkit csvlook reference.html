@@ -1,0 +1,244 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvlook.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvlook.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvlook">
+            <h1>
+                csvlook<a
+                    class="headerlink"
+                    href="#csvlook"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Renders a CSV to the command line in a Markdown-compatible,
+                    fixed-width format:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: csvlook [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+           [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]
+           [-S] [--blanks] [--null-value NULL_VALUES [NULL_VALUES ...]]
+           [--date-format DATE_FORMAT] [--datetime-format DATETIME_FORMAT]
+           [-H] [-K SKIP_LINES] [-v] [-l] [--zero] [-V]
+           [--max-rows MAX_ROWS] [--max-columns MAX_COLUMNS]
+           [--max-column-width MAX_COLUMN_WIDTH]
+           [--max-precision MAX_PRECISION] [--no-number-ellipsis]
+           [-y SNIFF_LIMIT] [-I]
+           [FILE]
+
+Render a CSV file in the console as a Markdown-compatible, fixed-width table.
+
+positional arguments:
+FILE                  The CSV file to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+--max-rows MAX_ROWS   The maximum number of rows to display before
+                    truncating the data.
+--max-columns MAX_COLUMNS
+                    The maximum number of columns to display before
+                    truncating the data.
+--max-column-width MAX_COLUMN_WIDTH
+                    Truncate all columns to at most this width. The
+                    remainder will be replaced with ellipsis.
+--max-precision MAX_PRECISION
+                    The maximum number of decimal places to display. The
+                    remainder will be replaced with ellipsis.
+--no-number-ellipsis  Disable the ellipsis if --max-precision is exceeded.
+-y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT
+                    Limit CSV dialect sniffing to the specified number of
+                    bytes. Specify "0" to disable sniffing entirely, or
+                    "-1" to sniff the entire file.
+-I, --no-inference    Disable type inference when parsing the input. This
+                    disables the reformatting of values.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    If a table is too wide to display properly try piping the
+                    output to
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">less</span>
+                        <span class="pre">-S</span></code
+                    >
+                    or truncating it using
+                    <a class="reference internal" href="csvcut.html"
+                        ><span class="doc">csvcut</span></a
+                    >.
+                </p>
+                <p>
+                    If the table is too long, try filtering it down with grep or
+                    piping the output to
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">less</span></code
+                    >.
+                </p>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        The fractional part of a decimal numberal is always
+                        truncated. To control this truncation, use
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">--no-inference</span></code
+                        >
+                        along with
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">--max-column-width</span></code
+                        >.
+                    </p>
+                </div>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>Basic use:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvlook<span class="w"> </span>examples/testfixed_converted.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    This tool is especially useful as a final operation when
+                    piping through other tools:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span><span class="m">9</span>,1<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvlook
+</pre>
+                    </div>
+                </div>
+                <p>
+                    If a data row contains more cells than the header row,
+                    csvlook will error. Use
+                    <a class="reference internal" href="csvclean.html"
+                        ><span class="doc">csvclean</span></a
+                    >
+                    to remove such rows.
+                </p>
+                <p>To ignore the extra cells, instead:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvcut<span class="w"> </span>-C<span class="w"> </span><span class="s2">""</span><span class="w"> </span>examples/bad.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvlook
+</pre>
+                    </div>
+                </div>
+                <p>
+                    If these rows are at the top of the file (for example,
+                    copyright notices), you can skip the rows:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvlook<span class="w"> </span>--skip-lines<span class="w"> </span><span class="m">1</span><span class="w"> </span>examples/bad.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    This error can also occur if csvlook incorrectly deduces
+                    (“sniffs”) the CSV format. To disable CSV sniffing, set
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--snifflimit</span>
+                        <span class="pre">0</span></code
+                    >
+                    and then, if necessary, set the
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--delimiter</span></code
+                    >
+                    and
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--quotechar</span></code
+                    >
+                    options yourself. Or, set
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--snifflimit</span>
+                        <span class="pre">-1</span></code
+                    >
+                    to use the entire file as the sample, instead of the first
+                    1024 bytes.
+                </p>
+            </section>
+        </section>
+    </article>
+</div>
