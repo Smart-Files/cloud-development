@@ -16,32 +16,41 @@
 		P
 	} from 'flowbite-svelte';
 	import { get, writable, type Writable } from 'svelte/store';
-	import type { ChangeEvent } from 'svelte/elements';
 	import { FileSymlink } from 'lucide-svelte';
-	import { WriteStatus, files, input } from '../../stores/posts';
+	import { usePosts } from '../../stores/posts';
+	import { WriteStatus, type UploadFile } from '../../stores/types';
+	import { files, input } from '../../stores/store';
 
 	// All files that are uploaded will be stored here
 	let draggingOver = false; // Whether the user is dragging over the dropzone or not
 
-	const dispatch = createEventDispatcher<{ submit: { input: string; files: File[] } }>();
+	const dispatch = createEventDispatcher<{
+		submit: { input: string; files: { [uuid: string]: UploadFile } };
+	}>();
 
 	const draggingOverClass =
 		'flex flex-row justify-center items-center w-full rounded-lg border-2 border-dashed outline-4 outline outline-zinc-900 cursor-pointer bg-zinc-900 border-dashed border-blue-700 opacity-80 h-16'; // Classes to apply when the user is dragging over the dropzone
 	const notDraggingOverClass =
 		'flex flex-row justify-center items-center w-full rounded-lg border-2 outline-4 outline outline-zinc-900 hover:outline-zinc-800 hover:border-zinc-8000 cursor-pointer bg-zinc-900 border-zinc-900 hover:bg-zinc-800 h-16'; // Classes to apply when the user is not dragging over the dropzone
 
-	export let isLoading: Writable<WriteStatus>;
+	export let writeStatus: Writable<WriteStatus>;
 	// export let files: UseChatHelpers['files'];
 
+	let posts: ReturnType<typeof usePosts>;
+
+	onMount(() => {
+		posts = usePosts();
+	});
+
 	let value = '';
-	let previousFiles: File[] = [];
+	let previousFilesLength: number = 0;
 
 	files.subscribe((fileData) => {
-		if (fileData.length < previousFiles.length) {
+		if (Object.keys(fileData).length < previousFilesLength) {
 			value = '';
-			previousFiles = fileData;
+			previousFilesLength = Object.keys(fileData).length;
 		} else {
-			previousFiles = fileData;
+			previousFilesLength = Object.keys(fileData).length;
 		}
 	});
 
@@ -50,7 +59,7 @@
 			event.preventDefault();
 			await dispatch('submit', { input: $input, files: get(files) });
 			$input = '';
-			$files = [];
+			// files.set({});
 		}
 	}
 
@@ -66,32 +75,42 @@
 		draggingOver = false;
 	};
 
+	const downloadUpdateCallback = (percent: number) => {
+		console.log('UPLOAD UPDATE', percent);
+	};
+
+	const addFile = (file: File) => {
+		// files.update((files) => [...files, file]);
+		console.log('POSTS', posts, $posts);
+		posts.uploadFile(file, downloadUpdateCallback);
+	};
+
 	const dropHandle = (event: DragEvent) => {
 		draggingOver = false;
 		event.preventDefault();
 		if (event.dataTransfer?.items) {
 			[...event.dataTransfer.items].forEach((item, i) => {
 				console.log('File Dropped', item);
-				let file: File;
-				if (item.kind === 'file') {
-					files.update((files) => [...files, file]);
-				} else {
-					console.log('ERROR: NOT A FILE');
-				}
+				let file = item.getAsFile();
+				if (file !== null) addFile(file);
 			});
 		} else {
-			[...event.dataTransfer?.files].forEach((file, i) => {
-				console.log('File Dropped', file);
-				files.update((files) => [...files, file]);
-			});
+			let fileList = event.dataTransfer?.files;
+			if (fileList !== undefined) {
+				let data = Array.from(fileList);
+				data.forEach((file, i) => {
+					console.log('File Dropped', file);
+					addFile(file);
+				});
+			}
 		}
 	};
 
-	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (event) => {
 		const eventFiles = event.target.files;
 		for (const file of eventFiles) {
 			console.log('File Selected', file);
-			files.update((files) => [...files, file]);
+			addFile(file);
 		}
 	};
 
@@ -199,8 +218,8 @@
 					<Button
 						type="submit"
 						size="icon"
-						disabled={$isLoading === WriteStatus.LOADING ||
-							$isLoading == WriteStatus.error ||
+						disabled={$writeStatus === WriteStatus.LOADING ||
+							$writeStatus == WriteStatus.ERROR ||
 							$input === ''}
 					>
 						<IconArrowElbow />

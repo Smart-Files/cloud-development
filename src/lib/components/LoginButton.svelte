@@ -3,7 +3,7 @@
 	import { IconGitHub, IconSpinner } from '$lib/components/ui/icons';
 	import { cn } from '$lib/utils';
 	import type { Writable } from 'svelte/store';
-	import { WriteStatus } from '../../stores/posts';
+	import { WriteStatus } from '../../stores/types';
 
 	export let text = 'Login with GitHub';
 	export let showGithubIcon = true;
@@ -20,7 +20,7 @@
 		// isLoading.set(true);
 		// signIn('github', { callbackUrl: `/` });
 	}}
-	disabled={$isLoading === WriteStatus.LOADING || $isLoading === WriteStatus.error}
+	disabled={$isLoading === WriteStatus.LOADING || $isLoading === WriteStatus.ERROR}
 	class={cn(className)}
 	{...$$restProps}
 >

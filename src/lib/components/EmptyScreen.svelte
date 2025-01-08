@@ -8,16 +8,16 @@
 
 	const exampleMessages = [
 		{
-			heading: 'Explain technical concepts',
-			message: `What is a "serverless function"?`
+			heading: 'Convert a PNG file to JPG',
+			message: `Convert this PNG file to JPG`
 		},
 		{
-			heading: 'Summarize an article',
-			message: 'Summarize the following article for a 2nd grader: \n'
+			heading: 'Extract audio from a video',
+			message: 'Extract the audio from this video and save as an mp3 file'
 		},
 		{
-			heading: 'Draft an email',
-			message: `Draft an email to my boss about the following: \n`
+			heading: 'Convert a PDF to a Word document',
+			message: `Convert this PDF to a Word document`
 		}
 	];
 </script>
@@ -26,7 +26,7 @@
 	<div class="rounded-lg border bg-background p-8">
 		<h1 class="mb-2 text-lg font-semibold">Welcome to SmartFile AI Chatbot!</h1>
 		<p class="mb-2 leading-normal text-muted-foreground">
-			This is an AI chatbot app built with
+			This is an AI file converter app built with
 			<ExternalLink href="https://kit.svelte.dev">SvelteKit</ExternalLink>
 			.
 		</p>

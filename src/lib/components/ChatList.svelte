@@ -1,50 +1,56 @@
 <script lang="ts">
 	import ChatMessage from '$lib/components/ChatMessage.svelte';
 	import { Separator } from '$lib/components/ui/separator';
-	import type { UseChatHelpers } from 'ai/svelte';
 	import { get, type Readable, type Writable } from 'svelte/store';
-	import type { Post, PostStore, usePosts } from '../../stores/posts';
-	import { WriteStatus, files } from '../../stores/posts';
+	import { usePosts } from '../../stores/posts';
 	import FileBlock from './FileBlock.svelte';
-	import { write_status } from '../../stores/posts';
+	import { onMount } from 'svelte';
+	import { WriteStatus, type Post, type UploadFile } from '../../stores/types';
+	import { files, write_status } from '../../stores/store';
 
-	export let posts: ReturnType<typeof usePosts>;
+	let posts: ReturnType<typeof usePosts>;
 	let uuid: string;
 	let messages: Post[];
 
-	posts.subscribe((val) => {
-		uuid = posts.getUUID();
-		messages = val.chats?.[uuid];
+	onMount(() => {
+		posts = usePosts();
+
+		posts.subscribe((chatData) => {
+			uuid = posts.getUUID();
+			if (chatData && chatData.posts) {
+				messages = chatData.posts;
+			}
+		});
 	});
 
 	function handleFileDelete(event: CustomEvent) {
-		const deletedFile = event.detail.file;
+		const deletedFile: UploadFile = event.detail.uploadFile;
 		get(write_status);
 
 		if (get(write_status) === WriteStatus.LOADING) {
 			return;
 		}
 
-		posts.deleteFile(deletedFile);
+		posts.deleteFile(deletedFile.uuid);
 	}
+
+	$: fileData = Object.values($files);
 </script>
 
-{#if $posts.chats}
+{#if $files}
 	<div class="relative mx-auto max-w-2xl px-4">
 		<!-- Uploaded Files -->
-		{#if $files}
-			<div
-				class="flex flex-wrap max-h-36 overflow-y-scroll gap-2 mb-6 justify-items-start content-around"
-			>
-				{#each $files as file, index}
-					<div
-						class="flex-grow sm:flex-grow-0 sm:basis-1/{$files.length} min-w-[220px] basis-[calc(50% - 1rem)] max-w-[100%]"
-					>
-						<FileBlock {file} on:delete={handleFileDelete} />
-					</div>
-				{/each}
-			</div>
-		{/if}
+		<div
+			class="flex flex-wrap max-h-36 overflow-y-scroll gap-2 mb-6 justify-items-start content-around"
+		>
+			{#each fileData as file, index}
+				<div
+					class="flex-grow sm:flex-grow-0 sm:basis-1/{$files.length} min-w-[220px] basis-[calc(50% - 1rem)] max-w-[100%]"
+				>
+					<FileBlock uploadFile={file} on:delete={handleFileDelete} />
+				</div>
+			{/each}
+		</div>
 		{#if messages}
 			{#each messages as message, index}
 				<div>
@@ -54,6 +60,9 @@
 					{/if}
 				</div>
 			{/each}
+			{#if messages.length >= 3}
+				<div class="h-28"></div>
+			{/if}
 		{/if}
 	</div>
 {/if}

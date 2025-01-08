@@ -42,7 +42,7 @@
 			{/if}
 		</div>
 	</div>
-	<div class="flex items-center justify-end space-x-2">
+	<!-- <div class="flex items-center justify-end space-x-2">
 		<a
 			target="_blank"
 			href="https://github.com/jianyuan/sveltekit-ai-chatbot"
@@ -61,5 +61,5 @@
 			<span class="hidden sm:block">Deploy to Vercel</span>
 			<span class="sm:hidden">Deploy</span>
 		</a>
-	</div>
+	</div> -->
 </header>
