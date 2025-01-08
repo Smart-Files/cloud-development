@@ -11,13 +11,12 @@
  * 
  */
 import { QuerySnapshot, collection, doc, getDoc, onSnapshot, query as qref, where, type DocumentChange, DocumentSnapshot } from "firebase/firestore";
-import { posts, type Post, write_status, WriteStatus, files as files_store } from "../stores/posts";
-import { db } from "./firestore";
-const { MODE } = import.meta.env;
+import { db } from "./firebase";
+import { BASE_URL } from "$lib/constants.js"
 import { get, writable } from "svelte/store";
 import axios from "axios";
-
-export const BASE_URL = MODE == "development" ? "http://localhost:8080/" : "https://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/"
+import { chat, write_status } from "../stores/store";
+import { WriteStatus, type UploadFile } from "../stores/types";
 
 export default class SmartfileClient {
     uuid: string;
@@ -42,7 +41,13 @@ export default class SmartfileClient {
 
         console.log("Authentication Complete: ", this.authenticated, this.uuid);
 
-        return this.authenticated ? { status: "success", uuid: this.uuid } : { status: "error", error: "Failed to authenticate" };
+        if (this.authenticated) {
+            console.log("Authentication Complete: ", this.authenticated, this.uuid);
+            write_status.set(WriteStatus.IDLE);
+            return { status: "success", uuid: this.uuid };
+        } else {
+            return { status: "error", error: "Failed to authenticate" };
+        }
     }
 
     public async stop() {
@@ -64,7 +69,7 @@ export default class SmartfileClient {
         return filename.replace(/[^a-zA-Z0-9\-_\.]+/g, '_');
     }
 
-    public async uploadFiles(files: File[]) {
+    public async uploadFiles(files: UploadFile[], downloadUpdate: (percent: number, uuid: string) => void) {
         if (!this.authenticated) {
             await this.auth();
             if (!this.authenticated) {
@@ -77,7 +82,8 @@ export default class SmartfileClient {
         let formData = new FormData();
         formData.append('uuid', this.uuid);
 
-        files.forEach(file => {
+        files.forEach((fileObj: UploadFile) => {
+            let file = fileObj.file
             // Create a file-safe name by removing or replacing special characters
             const fileSafeName = this.createFileSafeName(file.name);
             const fileWithSafeName = new File([file], fileSafeName, {
@@ -92,81 +98,29 @@ export default class SmartfileClient {
         //     body: formData
         // });
 
+        const uuid = this.uuid
+
         let response = await axios.post("/api/upload-files", formData, {
             onUploadProgress: (progressEvent) => {
-                fileProgress.set(progressEvent.loaded / (progressEvent.total || 1));
+                let progress = progressEvent.loaded / (progressEvent.total || 1);
+                downloadUpdate(progress, uuid);
             }
         })
-
-        files_store.set(files);
 
         let json = await response.data;
         return { ...json, fileProgress };
     }
 
 
-
-    // Use EventSource to begin process and listen for updates
-    private async beginProcess(query: string, uuid: string) {
+    public async processRequest(query: string, uuid: string) {
         // Subscribe to Firestore updates for this UUID
-        let processDoc = doc(db, "process", uuid)
-        let eventsRef = collection(processDoc, "events")
-
-
-        // const q = qref(processDoc); // Ensure correct use of query function from Firestore
-        const unsubscribe = onSnapshot(doc(db, "process", uuid), (doc: DocumentSnapshot) => {
-            let data = doc.data()
-
-            if (data != undefined && data.chunks) {
-                for (let chunk of data.chunks) { // Update posts only with newly added documents
-
-                    console.log("-- data --", chunk)
-                    if (chunk.status == "completed") {
-                        write_status.set(WriteStatus.done);
-                    }
-                    if (chunk.messages && chunk.messages.length > 0) {
-                        if (chunk.messages[0].content == "") {
-                            console.log("Empty message")
-                            continue
-                        }
-                    } else {
-                        continue
-                    }
-
-                    console.log("FOUNDCHUNK", chunk.messages)
-
-                    if (chunk.messages[0].content.startsWith("Invalid Format:")) {
-                        continue
-                    }
-
-                    if (chunk.messages[0].content.startsWith("Command:")) {
-                        let post_data = get(posts);
-                        let all_posts = post_data.chats[this.uuid]
-                        let new_post = all_posts[all_posts.length - 1]
-                        all_posts[all_posts.length - 1] = { ...new_post, bash_output: chunk.messages[0].content }
-                        posts.update(old_posts => ({ chats: { ...old_posts.chats, [this.uuid]: all_posts } }));
-
-
-                    } else {
-                        posts.update(posts => ({
-                            chats: {
-                                ...posts.chats,
-                                [uuid]: [...(posts.chats[uuid] || []), chunk]
-                            }
-                        }));
-                    }
-                }
-            }
-        });
-
-        write_status.set(WriteStatus.LOADING);
-
+        write_status.set(WriteStatus.DONE);
 
         const formData = new FormData();
         formData.append('query', query);
         formData.append('uuid', uuid);
 
-        const url = MODE == "development" ? "http://localhost:8080/process_request" : "/api/process-request"
+        const url = "/api/process-request"
 
         let result = await fetch(url, {
             method: 'POST',
@@ -175,12 +129,6 @@ export default class SmartfileClient {
 
         return result
 
-    }
-
-    // Example usage
-    public async processRequest(query: string, uuid: string) {
-        const initResponse = await this.beginProcess(query, uuid);
-        return initResponse
     }
 
     public getUUID() {

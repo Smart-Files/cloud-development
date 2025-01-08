@@ -5,24 +5,24 @@
 	import FooterText from '$lib/components/FooterText.svelte';
 	import PromptForm from '$lib/components/PromptForm.svelte';
 	import type { Writable } from 'svelte/store';
-	import {
-		WriteStatus,
-		write_status,
-		type Post,
-		type PostStore,
-		type usePosts
-	} from '../../stores/posts';
+	import { usePosts } from '../../stores/posts';
+	import { onMount } from 'svelte';
+	import { WriteStatus, type Post, type UploadFile } from '../../stores/types';
+	import { write_status } from '../../stores/store';
 
 	let id: string;
 	let messages: Post[];
 
-	export let posts: ReturnType<typeof usePosts>;
-	export let input: Writable<string>;
+	let posts: ReturnType<typeof usePosts>;
+
+	onMount(() => {
+		posts = usePosts();
+	});
 
 	$: {
 		if ($posts) {
 			id = posts.getUUID();
-			messages = $posts.chats[id];
+			messages = $posts.posts;
 		}
 	}
 
@@ -34,10 +34,9 @@
 		// posts.reload();
 	};
 
-	const gen = ({ input, files }: { input: string; files: File[] }) => {
+	const gen = ({ input }: { input: string }) => {
 		console.log('input', input);
-		console.log('files', files);
-		posts.generate(input, files);
+		posts.generate(input);
 	};
 </script>
 
@@ -50,7 +49,7 @@
 					<IconStop class="mr-2" />
 					Stop generating
 				</Button>
-			{:else if $posts && $posts.chats[id].length > 0}
+			{:else if $posts && $posts.posts.length > 0}
 				<Button variant="outline" on:click={() => reload()} class="bg-background">
 					<IconRefresh class="mr-2" />
 					Regenerate response
@@ -64,7 +63,7 @@
 				on:submit={async (event) => {
 					gen(event.detail);
 				}}
-				isLoading={write_status}
+				writeStatus={write_status}
 			/>
 		</div>
 	</div>

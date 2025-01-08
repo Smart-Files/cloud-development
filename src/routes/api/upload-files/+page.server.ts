@@ -1,5 +1,7 @@
 import { fail } from '@sveltejs/kit';
+import { BASE_URL } from "$lib/constants.js"
 
+// Upload Files for chat session
 /** @type {import('./$types').Actions} */
 export const actions = {
     default: async ({ request }) => {
@@ -40,7 +42,7 @@ export const actions = {
             uploadFormData.append('files', files);
         }
 
-        const response = await fetch('https://smartfile-sever-test-3-zaq4skcvqq-uc.a.run.app/upload_files/', {
+        const response = await fetch(`${BASE_URL}upload_files/`, {
             method: 'POST',
             body: uploadFormData
         });

@@ -3,12 +3,13 @@
 	import { IconDownload, IconOpenAI, IconUser } from '$lib/components/ui/icons';
 	import { cn } from '$lib/utils';
 	import type { Message } from 'ai';
-	import type { Post } from '../../stores/posts';
+	import type { Post } from '../../stores/typ';
 	import IconSvelteChat from './ui/icons/IconSvelteChat.svelte';
 	import { Card } from 'flowbite-svelte';
 	import { CodeBlock } from 'svhighlight';
-	import { BASE_URL } from '$lib/smartfileclient';
+	import { BASE_URL } from '$lib/constants';
 	import { onMount } from 'svelte';
+	import type { AnyNode } from 'postcss';
 
 	export let message: Post;
 
@@ -37,36 +38,71 @@
 		} else if (tool_name.includes('search')) {
 			return { language: 'plaintext', headerText: 'Searching Documentation' };
 		} else {
-			return { language: 'plaintext', headerText: tool };
+			let titleCased = tool
+				.replace('_', ' ')
+				.replace(
+					/\w\S*/g,
+					(text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+				);
+
+			return { language: 'plaintext', headerText: titleCased };
 		}
 	}
 
-	function formatMessage(messages: any[]) {
+	function formatMessage(messages: any[]): string {
 		// let content = message.replace("\n", "</br>")
 		let content = messages
 			.map((el) => el.content)
 			.join('')
-			.split('\n')
-			.map((line) => {
-				if (line.startsWith('Action: ') || line.startsWith('Action Input: ')) {
-					return '';
-				}
+			.trim();
 
-				if (line.startsWith('Command: ')) {
-					return '';
+		if (content.startsWith('```json') && content.endsWith('```')) {
+			content = content.replace('```json', '').replace('```', '').trim();
+
+			let parsed_content;
+
+			try {
+				parsed_content = JSON.parse(content);
+			} catch (e) {
+				console.log('Error parsing content', e, '\n\nContent:', content);
+
+				return content;
+			}
+
+			let message_action = parsed_content['action'];
+			let action_input = parsed_content['action_input'] ?? '';
+
+			if (message_action) {
+				switch (message_action) {
+					case 'execute_command':
+						return '';
+					case 'search_file_tools_docs':
+						const content_text = ` for &quot;<span class="text-zinc-400 italic">${action_input}</span>&quot;`;
+						return `Let me search my documentation${action_input ? content_text : '.'}`;
+					case 'Final Answer':
+						return action_input;
 				}
-				return line;
-			})
-			.filter((line) => line !== '')
-			.join('\n');
+			}
+		}
 
 		return content;
 	}
 
+	function process_input(input: string) {
+		if (input.startsWith('```') && input.endsWith('```')) {
+			return input.slice(3, -3);
+		}
+		if (input.startsWith('`') && input.endsWith('`')) {
+			return input.slice(1, -1);
+		}
+
+		return input;
+	}
+
 	function process_output(output: string) {
 		let result = '';
-		let stdout = output.match(/STDOUT:\n(.*?)STDERR/s);
-		let stderr = output.match(/STDERR:\n(.*?)Return Code/s);
+		let stdout = output.match(/STDOUT:((.|\n)*)STDERR/s);
+		let stderr = output.match(/STDERR:((.|\n)*)Return Code/s);
 		if (stdout) {
 			result = stdout[1] + '\n';
 		}
@@ -74,11 +110,12 @@
 			result += stderr[1] + '\n';
 		}
 
-		result = result.replaceAll(/^None$/g, '').trim();
-
-		if ((result = '')) {
-			result = 'No output';
+		// Remove surrounding backticks if they wrap the output
+		if (result.startsWith('`') && result.endsWith('`')) {
+			result = result.slice(1, -1);
 		}
+
+		result = result.replaceAll('None', '').trim();
 
 		if (result.length > 1000) {
 			result = result.substring(0, 996) + '...';
@@ -105,37 +142,47 @@
 		{#if message.actions}
 			{#each message.actions as action}
 				<CodeBlock
-					code={action.tool_input}
+					code={process_input(action.tool_input)}
 					language={getSearchType(action.tool).language}
 					headerText={getSearchType(action.tool).headerText}
 					showLineNumbers={false}
 				/>
-				{#if message.bash_output && process_output(message.bash_output).length > 0}
-					<div
-						class="text-stone-300 bg-slate-950 p-2 rounded-md font-mono text-sm overflow-x-auto overflow-y-auto"
-					>
-						{process_output(message.bash_output)}
-					</div>
+				{#if message.output}
+					{#if process_output(message.output).length > 0}
+						<div
+							class="text-stone-300 bg-slate-950 p-2 rounded-md font-mono text-sm overflow-x-auto overflow-y-auto"
+						>
+							{process_output(message.output)}
+						</div>
+					{:else}
+						<div
+							class="text-stone-600 bg-slate-950 italic p-2 rounded-md font-mono text-sm overflow-x-auto overflow-y-auto"
+						>
+							No output
+						</div>
+					{/if}
 				{/if}
 			{/each}
 		{/if}
 		{#if message.output && message.files}
 			<!-- Separator -->
-			<div class="h-4 w-4 bg-gray-200 rounded-full"></div>
-			{#each message.files as file}
-				<a target="_blank" href={`${BASE_URL}download/${message.uuid}/${file}`}>
-					<div
-						class="flex flex-row justify-center max-w-sm px-4 py-1 w-[min-content] min-w-[200px] bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
-					>
-						<h5
-							class="flex-nowrap m-auto mx-auto my-auto text-nowrap leading-9 text-sm font-semibold tracking-tight text-gray-900 dark:text-white"
+			<!-- <div class="h-4 w-4 bg-gray-2000 rounded-full"></div> -->
+			<div class="w-full rounded-md mt-5 flex flex-row flex-wrap gap-3">
+				{#each message.files as file}
+					<a target="_blank" href={`${BASE_URL}download/${message.uuid}/${file}`}>
+						<div
+							class="flex flex-row justify-center pl-4 pr-2 py-1 w-30 h-30 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
 						>
-							{truncate(file, 40)}
-						</h5>
-						<IconDownload class="w-6 h-6 my-2 mx-2" />
-					</div>
-				</a>
-			{/each}
+							<h5
+								class="flex-nowrap m-auto mx-auto my-auto text-nowrap leading-9 text-sm font-semibold tracking-tight text-gray-900 dark:text-white"
+							>
+								{truncate(file, 40)}
+							</h5>
+							<IconDownload class="w-6 h-6 my-2 mx-2" />
+						</div>
+					</a>
+				{/each}
+			</div>
 		{/if}
 	</div>
 

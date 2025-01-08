@@ -29,7 +29,11 @@
 	)}
 	{...$$restProps}
 >
-	<CopyToClipboard text={message.content} on:copy={handleCopied} let:copy>
+	<CopyToClipboard
+		text={message.messages.map((message) => message.content).join('\n')}
+		on:copy={handleCopied}
+		let:copy
+	>
 		<Button variant="ghost" size="icon" on:click={copy}>
 			{#if isCopied}
 				<IconCheck />
