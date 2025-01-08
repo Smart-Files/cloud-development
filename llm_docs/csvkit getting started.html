@@ -1,0 +1,400 @@
+<div class="article-container">
+    <article role="main" id="furo-main-content">
+        <section id="getting-started">
+            <h1>
+                <span class="section-number">1. </span>Getting started<a
+                    class="headerlink"
+                    href="#getting-started"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="about-this-tutorial" class="">
+                <h2>
+                    <span class="section-number">1.1. </span>About this
+                    tutorial<a
+                        class="headerlink"
+                        href="#about-this-tutorial"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    There is no better way to learn how to use a new tool than
+                    to see it applied in a real world situation. To that end,
+                    this tutorial explains how to use csvkit tools by analyzing
+                    a real dataset.
+                </p>
+                <p>
+                    The data we will be using is a subset of the United States
+                    Defense Logistic Agency Law Enforcement Support Office’s
+                    (LESO) 1033 Program dataset, which describes how surplus
+                    military arms have been distributed to local police forces.
+                    This data was widely cited in the aftermath of the Ferguson,
+                    Missouri protests. The particular data we are using comes
+                    from an
+                    <a
+                        class="reference external"
+                        href="https://www.npr.org/2014/09/02/342494225/mraps-and-bayonets-what-we-know-about-the-pentagons-1033-program"
+                        >NPR report</a
+                    >
+                    analyzing the data.
+                </p>
+                <p>
+                    This tutorial assumes you have some basic familiarity with
+                    the command line. If you don’t have much experience, fear
+                    not! This has been written with beginners in mind. No prior
+                    experience with data processing or analysis is assumed.
+                </p>
+            </section>
+            <section id="getting-the-data" class="">
+                <h2>
+                    <span class="section-number">1.3. </span>Getting the data<a
+                        class="headerlink"
+                        href="#getting-the-data"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>Let’s start by creating a clean workspace:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>mkdir<span class="w"> </span>csvkit_tutorial
+<span class="nb">cd</span><span class="w"> </span>csvkit_tutorial
+</pre>
+                    </div>
+                </div>
+                <p>Now let’s fetch the data:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>curl<span class="w"> </span>-L<span class="w"> </span>-O<span class="w"> </span>https://raw.githubusercontent.com/wireservice/csvkit/master/examples/realdata/ne_1033_data.xlsx
+</pre>
+                    </div>
+                </div>
+            </section>
+            <section id="in2csv-the-excel-killer" class="">
+                <h2>
+                    <span class="section-number">1.4. </span>in2csv: the Excel
+                    killer<a
+                        class="headerlink"
+                        href="#in2csv-the-excel-killer"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    For purposes of this tutorial, I’ve converted this data to
+                    Excel format. (NPR published it in CSV format.) If you have
+                    Excel you can open the file and take a look at it, but
+                    really, who wants to wait for Excel to load? Instead, let’s
+                    convert it to a CSV:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>ne_1033_data.xlsx
+</pre>
+                    </div>
+                </div>
+                <p>
+                    You should see a CSV version of the data dumped into your
+                    terminal. All csvkit tools write to the terminal output,
+                    called “standard out”, by default. This isn’t very useful,
+                    so let’s write it to a file instead:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>ne_1033_data.xlsx<span class="w"> </span>&gt;<span class="w"> </span>data.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">data.csv</span></code
+                    >
+                    will now contain a CSV version of our original file. If you
+                    aren’t familiar with the
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">&gt;</span></code
+                    >
+                    syntax, it means “redirect standard out to a file”. If
+                    that’s hard to remember it may be more convenient to think
+                    of it as “save to”.
+                </p>
+                <p>
+                    We can verify that the data is saved to the new file by
+                    using the
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">cat</span></code
+                    >
+                    command to print it:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>cat<span class="w"> </span>data.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    <a class="reference internal" href="../scripts/in2csv.html"
+                        ><span class="doc">in2csv</span></a
+                    >
+                    can convert a variety of common file formats to CSV,
+                    including both
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">.xls</span></code
+                    >
+                    and
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">.xlsx</span></code
+                    >
+                    Excel files, JSON files, and fixed-width formatted files.
+                </p>
+            </section>
+            <section id="csvlook-data-periscope" class="">
+                <h2>
+                    <span class="section-number">1.5. </span>csvlook: data
+                    periscope<a
+                        class="headerlink"
+                        href="#csvlook-data-periscope"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Now that we have some data, we probably want to get some
+                    idea of what’s in it. We could open it in Excel or Google
+                    Docs, but wouldn’t it be nice if we could just take a look
+                    in the command line? To do that, we can use
+                    <a class="reference internal" href="../scripts/csvlook.html"
+                        ><span class="doc">csvlook</span></a
+                    >:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvlook<span class="w"> </span>data.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    At first the output of
+                    <a class="reference internal" href="../scripts/csvlook.html"
+                        ><span class="doc">csvlook</span></a
+                    >
+                    isn’t going to appear very promising. You’ll see a mess of
+                    data, pipe character and dashes. That’s because this dataset
+                    has many columns and they won’t all fit in the terminal at
+                    once. You have two options:
+                </p>
+                <ol class="arabic simple">
+                    <li>
+                        <p>
+                            Pipe the output to
+                            <code class="docutils literal notranslate"
+                                ><span class="pre">less</span>
+                                <span class="pre">-S</span></code
+                            >
+                            to display the lines without wrapping and use the
+                            arrow keys to scroll left and right:
+                        </p>
+                    </li>
+                </ol>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvlook<span class="w"> </span>data.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>less<span class="w"> </span>-S
+</pre>
+                    </div>
+                </div>
+                <ol class="arabic simple" start="2">
+                    <li>
+                        <p>
+                            Reduce which columns of our dataset are displayed
+                            before we look at it. This is what will do in the
+                            next section.
+                        </p>
+                    </li>
+                </ol>
+            </section>
+            <section id="csvcut-data-scalpel" class="">
+                <h2>
+                    <span class="section-number">1.6. </span>csvcut: data
+                    scalpel<a
+                        class="headerlink"
+                        href="#csvcut-data-scalpel"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    <a class="reference internal" href="../scripts/csvcut.html"
+                        ><span class="doc">csvcut</span></a
+                    >
+                    is the original csvkit tool. It inspired the rest. With it,
+                    we can select, delete and reorder the columns in our CSV.
+                    First, let’s just see what columns are in our data:
+                </p>
+                <div class="highlight-console notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="gp">$ </span>csvcut<span class="w"> </span>-n<span class="w"> </span>data.csv
+<span class="go">  1: state</span>
+<span class="go">  2: county</span>
+<span class="go">  3: fips</span>
+<span class="go">  4: nsn</span>
+<span class="go">  5: item_name</span>
+<span class="go">  6: quantity</span>
+<span class="go">  7: ui</span>
+<span class="go">  8: acquisition_cost</span>
+<span class="go">  9: total_cost</span>
+<span class="go"> 10: ship_date</span>
+<span class="go"> 11: federal_supply_category</span>
+<span class="go"> 12: federal_supply_category_name</span>
+<span class="go"> 13: federal_supply_class</span>
+<span class="go"> 14: federal_supply_class_name</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    As you can see, our dataset has fourteen columns. Let’s take
+                    a look at just columns
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">2</span></code
+                    >,
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">5</span></code
+                    >
+                    and
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">6</span></code
+                    >:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span><span class="m">2</span>,5,6<span class="w"> </span>data.csv
+</pre>
+                    </div>
+                </div>
+                <p>Now we’ve reduced our output CSV to only three columns.</p>
+                <p>
+                    We can also refer to columns by their names to make our
+                    lives easier:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span>county,item_name,quantity<span class="w"> </span>data.csv
+</pre>
+                    </div>
+                </div>
+            </section>
+            <section id="putting-it-together-with-pipes">
+                <h2>
+                    <span class="section-number">1.7. </span>Putting it together
+                    with pipes<a
+                        class="headerlink"
+                        href="#putting-it-together-with-pipes"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Now that we understand
+                    <a class="reference internal" href="../scripts/in2csv.html"
+                        ><span class="doc">in2csv</span></a
+                    >,
+                    <a class="reference internal" href="../scripts/csvlook.html"
+                        ><span class="doc">csvlook</span></a
+                    >
+                    and
+                    <a class="reference internal" href="../scripts/csvcut.html"
+                        ><span class="doc">csvcut</span></a
+                    >
+                    we can demonstrate the power of csvkit’s when combined with
+                    the standard command-line “pipe”. Try this command:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span>county,item_name,quantity<span class="w"> </span>data.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvlook<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</pre>
+                    </div>
+                </div>
+                <p>
+                    In addition to specifying filenames, all csvkit tools accept
+                    an input file via “standard in”. This means that, using the
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">|</span></code
+                    >
+                    (“pipe”) character we can use the output of one csvkit tool
+                    as the input of the next.
+                </p>
+                <p>
+                    In the example above, the output of
+                    <a class="reference internal" href="../scripts/csvcut.html"
+                        ><span class="doc">csvcut</span></a
+                    >
+                    becomes the input to
+                    <a class="reference internal" href="../scripts/csvlook.html"
+                        ><span class="doc">csvlook</span></a
+                    >. This also allow us to pipe output to standard Unix
+                    commands such as
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">head</span></code
+                    >, which prints only the first ten lines of its input. Here,
+                    the output of
+                    <a class="reference internal" href="../scripts/csvlook.html"
+                        ><span class="doc">csvlook</span></a
+                    >
+                    becomes the input of
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">head</span></code
+                    >.
+                </p>
+                <p>
+                    Piping is a core feature of csvkit. Of course, you can
+                    always write the output of each command to a file using
+                    <code class="docutils literal notranslate"
+                        ><span class="pre">&gt;</span></code
+                    >. However, it’s often faster and more convenient to use
+                    pipes to chain several commands together.
+                </p>
+                <p>
+                    We can also pipe
+                    <a class="reference internal" href="../scripts/in2csv.html"
+                        ><span class="doc">in2csv</span></a
+                    >, allowing us to combine all our previous operations into
+                    one:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>ne_1033_data.xlsx<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvcut<span class="w"> </span>-c<span class="w"> </span>county,item_name,quantity<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvlook<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</pre>
+                    </div>
+                </div>
+            </section>
+            <section id="summing-up" class="">
+                <h2>
+                    <span class="section-number">1.8. </span>Summing up<a
+                        class="headerlink"
+                        href="#summing-up"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    All the csvkit tools work with standard input and output.
+                    Any tool can be piped into another and into another. The
+                    output of any tool can be redirected to a file. In this way
+                    they form a data processing “pipeline” of sorts, allowing
+                    you to do non-trivial, repeatable work without creating
+                    dozens of intermediary files.
+                </p>
+                <p>
+                    Make sense? If you think you’ve got it figured out, you can
+                    move on to
+                    <a
+                        class="reference internal"
+                        href="2_examining_the_data.html"
+                        ><span class="doc">Examining the data</span></a
+                    >.
+                </p>
+            </section>
+        </section>
+    </article>
+</div>

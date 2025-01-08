@@ -1,0 +1,236 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvjson.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvjson.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvjson">
+            <h1>
+                csvjson<a
+                    class="headerlink"
+                    href="#csvjson"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Converts a CSV file into JSON or GeoJSON (depending on
+                    flags):
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: csvjson [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+           [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]
+           [-S] [--blanks] [--null-value NULL_VALUES [NULL_VALUES ...]]
+           [--date-format DATE_FORMAT] [--datetime-format DATETIME_FORMAT]
+           [-H] [-K SKIP_LINES] [-v] [-l] [--zero] [-V] [-i INDENT]
+           [-k KEY] [--lat LAT] [--lon LON] [--type TYPE]
+           [--geometry GEOMETRY] [--crs CRS] [--no-bbox] [--stream]
+           [-y SNIFF_LIMIT] [-I]
+           [FILE]
+
+Convert a CSV file into JSON (or GeoJSON).
+
+positional arguments:
+FILE                  The CSV file to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+-i INDENT, --indent INDENT
+                    Indent the output JSON this many spaces. Disabled by
+                    default.
+-k KEY, --key KEY     Output JSON as an object keyed by a given column, KEY,
+                    rather than as an array. All column values must be
+                    unique. If --lat and --lon are specified, this column
+                    is used as the GeoJSON Feature ID.
+--lat LAT             A column index or name containing a latitude. Output
+                    will be GeoJSON instead of JSON. Requires --lon.
+--lon LON             A column index or name containing a longitude. Output
+                    will be GeoJSON instead of JSON. Requires --lat.
+--type TYPE           A column index or name containing a GeoJSON type.
+                    Output will be GeoJSON instead of JSON. Requires --lat
+                    and --lon.
+--geometry GEOMETRY   A column index or name containing a GeoJSON geometry.
+                    Output will be GeoJSON instead of JSON. Requires --lat
+                    and --lon.
+--crs CRS             A coordinate reference system string to be included
+                    with GeoJSON output. Requires --lat and --lon.
+--no-bbox             Disable the calculation of a bounding box.
+--stream              Output JSON as a stream of newline-separated objects,
+                    rather than an as an array.
+-y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT
+                    Limit CSV dialect sniffing to the specified number of
+                    bytes. Specify "0" to disable sniffing.
+-I, --no-inference    Disable type inference (and --locale, --date-format,
+                    --datetime-format) when parsing CSV input.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Convert veteran’s education dataset to JSON keyed by state
+                    abbreviation:
+                </p>
+                <div class="highlight-console notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="gp">$ </span>csvjson<span class="w"> </span>-k<span class="w"> </span><span class="s2">"State Abbreviate"</span><span class="w"> </span>-i<span class="w"> </span><span class="m">4</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+<span class="go">{</span>
+<span class="go">    "AL": {</span>
+<span class="go">        "State Name": "ALABAMA",</span>
+<span class="go">        "State Abbreviate": "AL",</span>
+<span class="go">        "Code": 1.0,</span>
+<span class="go">        "Montgomery GI Bill-Active Duty": 6718.0,</span>
+<span class="go">        "Montgomery GI Bill- Selective Reserve": 1728.0,</span>
+<span class="go">        "Dependents' Educational Assistance": 2703.0,</span>
+<span class="go">        "Reserve Educational Assistance Program": 1269.0,</span>
+<span class="go">        "Post-Vietnam Era Veteran's Educational Assistance Program": 8.0,</span>
+<span class="go">        "TOTAL": 12426.0,</span>
+<span class="go">        "j": null</span>
+<span class="go">    },</span>
+<span class="go">    "...": {</span>
+<span class="go">        "...": "..."</span>
+<span class="go">    }</span>
+<span class="go">}</span>
+</pre>
+                    </div>
+                </div>
+                <p>Convert locations of public art into GeoJSON:</p>
+                <div class="highlight-console notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="gp">$ </span>csvjson<span class="w"> </span>--lat<span class="w"> </span>latitude<span class="w"> </span>--lon<span class="w"> </span>longitude<span class="w"> </span>--k<span class="w"> </span>slug<span class="w"> </span>--crs<span class="w"> </span>EPSG:4269<span class="w"> </span>-i<span class="w"> </span><span class="m">4</span><span class="w"> </span>examples/test_geo.csv
+<span class="go">{</span>
+<span class="go">    "type": "FeatureCollection",</span>
+<span class="go">    "bbox": [</span>
+<span class="go">        -95.334619,</span>
+<span class="go">        32.299076986939205,</span>
+<span class="go">        -95.250699,</span>
+<span class="go">        32.351434</span>
+<span class="go">    ],</span>
+<span class="go">    "crs": {</span>
+<span class="go">        "type": "name",</span>
+<span class="go">        "properties": {</span>
+<span class="go">            "name": "EPSG:4269"</span>
+<span class="go">        }</span>
+<span class="go">    },</span>
+<span class="go">    "features": [</span>
+<span class="go">        {</span>
+<span class="go">            "type": "Feature",</span>
+<span class="go">            "id": "dcl",</span>
+<span class="go">            "geometry": {</span>
+<span class="go">                "type": "Point",</span>
+<span class="go">                "coordinates": [</span>
+<span class="go">                    -95.30181,</span>
+<span class="go">                    32.35066</span>
+<span class="go">                ]</span>
+<span class="go">            },</span>
+<span class="go">            "properties": {</span>
+<span class="go">                "title": "Downtown Coffee Lounge",</span>
+<span class="go">                "artist": null,</span>
+<span class="go">                "description": "In addition to being the only coffee shop in downtown Tyler, DCL also features regular exhibitions of work by local artists.",</span>
+<span class="go">                "install_date": null,</span>
+<span class="go">                "address": "200 West Erwin Street",</span>
+<span class="go">                "type": "Gallery",</span>
+<span class="go">                "photo_url": null,</span>
+<span class="go">                "photo_credit": null,</span>
+<span class="go">                "last_seen_date": "2012-03-30"</span>
+<span class="go">            }</span>
+<span class="go">        },</span>
+<span class="go">        {</span>
+<span class="go">            "...": "..."</span>
+<span class="go">        }</span>
+<span class="go">    ],</span>
+<span class="go">    "crs": {</span>
+<span class="go">        "type": "name",</span>
+<span class="go">        "properties": {</span>
+<span class="go">            "name": "EPSG:4269"</span>
+<span class="go">        }</span>
+<span class="go">    }</span>
+<span class="go">}</span>
+</pre>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </article>
+</div>

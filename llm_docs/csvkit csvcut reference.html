@@ -1,0 +1,269 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvcut.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvcut.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvcut">
+            <h1>
+                csvcut<a
+                    class="headerlink"
+                    href="#csvcut"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Filters and truncates CSV files. Like the Unix “cut”
+                    command, but for tabular data:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: csvcut [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+          [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S] [-H]
+          [-K SKIP_LINES] [-v] [-l] [--zero] [-V] [-n] [-c COLUMNS]
+          [-C NOT_COLUMNS] [-x]
+          [FILE]
+
+Filter and truncate CSV files. Like the Unix "cut" command, but for tabular
+data.
+
+positional arguments:
+FILE                  The CSV file to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+-n, --names           Display column names and indices from the input CSV
+                    and exit.
+-c COLUMNS, --columns COLUMNS
+                    A comma-separated list of column indices, names or
+                    ranges to be extracted, e.g. "1,id,3-5". Defaults to
+                    all columns.
+-C NOT_COLUMNS, --not-columns NOT_COLUMNS
+                    A comma-separated list of column indices, names or
+                    ranges to be excluded, e.g. "1,id,3-5". Defaults to no
+                    columns.
+-x, --delete-empty-rows
+                    After cutting, delete rows which are completely empty.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        csvcut does not implement row filtering, for this you
+                        should pipe data to
+                        <a class="reference internal" href="csvgrep.html"
+                            ><span class="doc">csvgrep</span></a
+                        >.
+                    </p>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        If a data row is longer than the header row, its
+                        additional columns are truncated.
+                    </p>
+                </div>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <section id="print-columns">
+                    <h3>
+                        Print columns<a
+                            class="headerlink"
+                            href="#print-columns"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>Print the indices and names of all columns:</p>
+                    <div class="highlight-console notranslate">
+                        <div class="highlight">
+                            <pre><span></span><span class="gp">$ </span>csvcut<span class="w"> </span>-n<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+<span class="go">  1: State Name</span>
+<span class="go">  2: State Abbreviate</span>
+<span class="go">  3: Code</span>
+<span class="go">  4: Montgomery GI Bill-Active Duty</span>
+<span class="go">  5: Montgomery GI Bill- Selective Reserve</span>
+<span class="go">  6: Dependents' Educational Assistance</span>
+<span class="go">  7: Reserve Educational Assistance Program</span>
+<span class="go">  8: Post-Vietnam Era Veteran's Educational Assistance Program</span>
+<span class="go">  9: TOTAL</span>
+<span class="go"> 10:</span>
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        Print only the names of all columns, by removing the
+                        indices with the
+                        <code class="code docutils literal notranslate"
+                            ><span class="pre">cut</span></code
+                        >
+                        command:
+                    </p>
+                    <div class="highlight-console notranslate">
+                        <div class="highlight">
+                            <pre><span></span><span class="gp">$ </span>csvcut<span class="w"> </span>-n<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-c6-
+<span class="go">State Name</span>
+<span class="go">State Abbreviate</span>
+<span class="go">Code</span>
+<span class="go">Montgomery GI Bill-Active Duty</span>
+<span class="go">Montgomery GI Bill- Selective Reserve</span>
+<span class="go">Dependents' Educational Assistance</span>
+<span class="go">Reserve Educational Assistance Program</span>
+<span class="go">Post-Vietnam Era Veteran's Educational Assistance Program</span>
+<span class="go">TOTAL</span>
+</pre>
+                        </div>
+                    </div>
+                </section>
+                <section id="extract-columns">
+                    <h3>
+                        Extract columns<a
+                            class="headerlink"
+                            href="#extract-columns"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>Extract the first and third columns:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span>,3<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>
+                        Extract columns named “TOTAL” and “State Name” (in that
+                        order):
+                    </p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span>TOTAL,<span class="s2">"State Name"</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>Extract a column that may not exist in all files:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span><span class="nb">echo</span><span class="w"> </span>d,<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvjoin<span class="w"> </span>examples/dummy.csv<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvcut<span class="w"> </span>-c<span class="w"> </span>d
+<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>d,<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvjoin<span class="w"> </span>examples/join_no_header_row.csv<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvcut<span class="w"> </span>-c<span class="w"> </span>d
+</pre>
+                        </div>
+                    </div>
+                </section>
+                <section id="other">
+                    <h3>
+                        Other<a
+                            class="headerlink"
+                            href="#other"
+                            title="Link to this heading"
+                            >¶</a
+                        >
+                    </h3>
+                    <p>Add line numbers to a file, making no other changes:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvcut<span class="w"> </span>-l<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                        </div>
+                    </div>
+                    <p>Display a column’s unique values:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>1d<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq
+</pre>
+                        </div>
+                    </div>
+                    <p>Or:</p>
+                    <div class="highlight-bash notranslate">
+                        <div class="highlight">
+                            <pre><span></span>csvcut<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>csvsql<span class="w"> </span>--query<span class="w"> </span><span class="s1">'SELECT DISTINCT("State Name") FROM stdin'</span>
+</pre>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </article>
+</div>

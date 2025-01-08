@@ -1,0 +1,203 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvgrep.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvgrep.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvgrep">
+            <h1>
+                csvgrep<a
+                    class="headerlink"
+                    href="#csvgrep"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Filter tabular data to only those rows where certain columns
+                    contain a given value or match a regular expression:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: csvgrep [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+           [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-S] [-H]
+           [-K SKIP_LINES] [-v] [-l] [--zero] [-V] [-n] [-c COLUMNS]
+           [-m PATTERN] [-r REGEX] [-f MATCHFILE] [-i] [-a]
+           [FILE]
+
+Search CSV files. Like the Unix "grep" command, but for tabular data.
+
+positional arguments:
+FILE                  The CSV file to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+-n, --names           Display column names and indices from the input CSV
+                    and exit.
+-c COLUMNS, --columns COLUMNS
+                    A comma-separated list of column indices, names or
+                    ranges to be searched, e.g. "1,id,3-5".
+-m PATTERN, --match PATTERN
+                    A string to search for.
+-r REGEX, --regex REGEX
+                    A regular expression to match.
+-f MATCHFILE, --file MATCHFILE
+                    A path to a file. For each row, if any line in the
+                    file (stripped of line separators) is an exact match
+                    of the cell value, the row matches.
+-i, --invert-match    Select non-matching rows, instead of matching rows.
+-a  --any-match       Select rows in which any column matches, instead of
+                    all columns.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+                <p>
+                    NOTE: Even though ‘-m’, ‘-r’, and ‘-f’ are listed as
+                    “optional” arguments, you must specify one of them.
+                </p>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>Search for the row relating to Illinois:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvgrep<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>ILLINOIS<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Search for rows relating to states with names beginning with
+                    the letter “I”:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvgrep<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>-r<span class="w"> </span><span class="s2">"^I"</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>Search for rows that do not contain an empty state cell:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvgrep<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>-r<span class="w"> </span><span class="s2">"^</span>$<span class="s2">"</span><span class="w"> </span>-i<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>Perform a case-insensitive search:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvgrep<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>-r<span class="w"> </span><span class="s2">"(?i)illinois"</span><span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>Remove comment rows:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="nb">printf</span><span class="w"> </span><span class="s2">"a,b\n1,2\n# a comment\n3,4"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>csvgrep<span class="w"> </span>--invert-match<span class="w"> </span>-c1<span class="w"> </span>-r<span class="w"> </span><span class="s1">'^#'</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Get the indices of the columns that contain matching text
+                    (<code class="docutils literal notranslate"
+                        ><span class="pre">\x1e</span></code
+                    >
+                    is the
+                    <a
+                        class="reference external"
+                        href="https://en.wikipedia.org/wiki/C0_and_C1_control_codes#Field_separators"
+                        >Record Separator (RS) character</a
+                    >):
+                </p>
+                <div class="highlight-default notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvgrep -m 22 -a -c 1- examples/realdata/FY09_EDU_Recipients_by_State.csv | csvformat -M $'\x1e' | xargs -d $'\x1e' -n1 sh -c 'echo $0 | csvcut -n' | grep 22
+</pre>
+                    </div>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>This last example is not performant.</p>
+                </div>
+            </section>
+        </section>
+    </article>
+</div>

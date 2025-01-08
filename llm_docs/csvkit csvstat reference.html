@@ -1,0 +1,207 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/csvstat.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/csvstat.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="csvstat">
+            <h1>
+                csvstat<a
+                    class="headerlink"
+                    href="#csvstat"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Prints descriptive statistics for all columns in a CSV file.
+                    Will intelligently determine the type of each column and
+                    then print analysis relevant to that type (ranges for dates,
+                    mean and median for integers, etc.):
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage:<span class="w"> </span>csvstat<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span><span class="o">[</span>-d<span class="w"> </span>DELIMITER<span class="o">]</span><span class="w"> </span><span class="o">[</span>-t<span class="o">]</span><span class="w"> </span><span class="o">[</span>-q<span class="w"> </span>QUOTECHAR<span class="o">]</span><span class="w"> </span><span class="o">[</span>-u<span class="w"> </span><span class="o">{</span><span class="m">0</span>,1,2,3<span class="o">}]</span><span class="w"> </span><span class="o">[</span>-b<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>-p<span class="w"> </span>ESCAPECHAR<span class="o">]</span><span class="w"> </span><span class="o">[</span>-z<span class="w"> </span>FIELD_SIZE_LIMIT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-e<span class="w"> </span>ENCODING<span class="o">]</span><span class="w"> </span><span class="o">[</span>-L<span class="w"> </span>LOCALE<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>-S<span class="o">]</span><span class="w"> </span><span class="o">[</span>--blanks<span class="o">]</span><span class="w"> </span><span class="o">[</span>--null-value<span class="w"> </span>NULL_VALUES<span class="w"> </span><span class="o">[</span>NULL_VALUES<span class="w"> </span>...<span class="o">]]</span>
+<span class="w">               </span><span class="o">[</span>--date-format<span class="w"> </span>DATE_FORMAT<span class="o">]</span><span class="w"> </span><span class="o">[</span>--datetime-format<span class="w"> </span>DATETIME_FORMAT<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>-H<span class="o">]</span><span class="w"> </span><span class="o">[</span>-K<span class="w"> </span>SKIP_LINES<span class="o">]</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="o">]</span><span class="w"> </span><span class="o">[</span>--zero<span class="o">]</span><span class="w"> </span><span class="o">[</span>-V<span class="o">]</span><span class="w"> </span><span class="o">[</span>--csv<span class="o">]</span><span class="w"> </span><span class="o">[</span>--json<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>-i<span class="w"> </span>INDENT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-n<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>COLUMNS<span class="o">]</span><span class="w"> </span><span class="o">[</span>--type<span class="o">]</span><span class="w"> </span><span class="o">[</span>--nulls<span class="o">]</span><span class="w"> </span><span class="o">[</span>--non-nulls<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>--unique<span class="o">]</span><span class="w"> </span><span class="o">[</span>--min<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max<span class="o">]</span><span class="w"> </span><span class="o">[</span>--sum<span class="o">]</span><span class="w"> </span><span class="o">[</span>--mean<span class="o">]</span><span class="w"> </span><span class="o">[</span>--median<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>--stdev<span class="o">]</span><span class="w"> </span><span class="o">[</span>--len<span class="o">]</span><span class="w"> </span><span class="o">[</span>--max-precision<span class="o">]</span><span class="w"> </span><span class="o">[</span>--freq<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>--freq-count<span class="w"> </span>FREQ_COUNT<span class="o">]</span><span class="w"> </span><span class="o">[</span>--count<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>--decimal-format<span class="w"> </span>DECIMAL_FORMAT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-G<span class="o">]</span><span class="w"> </span><span class="o">[</span>-y<span class="w"> </span>SNIFF_LIMIT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-I<span class="o">]</span>
+<span class="w">               </span><span class="o">[</span>FILE<span class="o">]</span>
+
+Print<span class="w"> </span>descriptive<span class="w"> </span>statistics<span class="w"> </span><span class="k">for</span><span class="w"> </span>each<span class="w"> </span>column<span class="w"> </span><span class="k">in</span><span class="w"> </span>a<span class="w"> </span>CSV<span class="w"> </span>file.
+
+positional<span class="w"> </span>arguments:
+<span class="w">  </span>FILE<span class="w">                  </span>The<span class="w"> </span>CSV<span class="w"> </span>file<span class="w"> </span>to<span class="w"> </span>operate<span class="w"> </span>on.<span class="w"> </span>If<span class="w"> </span>omitted,<span class="w"> </span>will<span class="w"> </span>accept
+<span class="w">                        </span>input<span class="w"> </span>as<span class="w"> </span>piped<span class="w"> </span>data<span class="w"> </span>via<span class="w"> </span>STDIN.
+
+optional<span class="w"> </span>arguments:
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">            </span>show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>--csv<span class="w">                 </span>Output<span class="w"> </span>results<span class="w"> </span>as<span class="w"> </span>a<span class="w"> </span>CSV<span class="w"> </span>table,<span class="w"> </span>rather<span class="w"> </span>than<span class="w"> </span>plain<span class="w"> </span>text.
+<span class="w">  </span>--json<span class="w">                </span>Output<span class="w"> </span>results<span class="w"> </span>as<span class="w"> </span>JSON<span class="w"> </span>text,<span class="w"> </span>rather<span class="w"> </span>than<span class="w"> </span>plain<span class="w"> </span>text.
+<span class="w">  </span>-i<span class="w"> </span>INDENT,<span class="w"> </span>--indent<span class="w"> </span>INDENT
+<span class="w">                        </span>Indent<span class="w"> </span>the<span class="w"> </span>output<span class="w"> </span>JSON<span class="w"> </span>this<span class="w"> </span>many<span class="w"> </span>spaces.<span class="w"> </span>Disabled<span class="w"> </span>by
+<span class="w">                        </span>default.
+<span class="w">  </span>-n,<span class="w"> </span>--names<span class="w">           </span>Display<span class="w"> </span>column<span class="w"> </span>names<span class="w"> </span>and<span class="w"> </span>indices<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>input<span class="w"> </span>CSV
+<span class="w">                        </span>and<span class="w"> </span>exit.
+<span class="w">  </span>-c<span class="w"> </span>COLUMNS,<span class="w"> </span>--columns<span class="w"> </span>COLUMNS
+<span class="w">                        </span>A<span class="w"> </span>comma-separated<span class="w"> </span>list<span class="w"> </span>of<span class="w"> </span>column<span class="w"> </span>indices,<span class="w"> </span>names<span class="w"> </span>or
+<span class="w">                        </span>ranges<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>examined,<span class="w"> </span>e.g.<span class="w"> </span><span class="s2">"1,id,3-5"</span>.<span class="w"> </span>Defaults<span class="w"> </span>to
+<span class="w">                        </span>all<span class="w"> </span>columns.
+<span class="w">  </span>--type<span class="w">                </span>Only<span class="w"> </span>output<span class="w"> </span>data<span class="w"> </span>type.
+<span class="w">  </span>--nulls<span class="w">               </span>Only<span class="w"> </span>output<span class="w"> </span>whether<span class="w"> </span>columns<span class="w"> </span>contains<span class="w"> </span>nulls.
+<span class="w">  </span>--non-nulls<span class="w">           </span>Only<span class="w"> </span>output<span class="w"> </span>counts<span class="w"> </span>of<span class="w"> </span>non-null<span class="w"> </span>values.
+<span class="w">  </span>--unique<span class="w">              </span>Only<span class="w"> </span>output<span class="w"> </span>counts<span class="w"> </span>of<span class="w"> </span>unique<span class="w"> </span>values.
+<span class="w">  </span>--min<span class="w">                 </span>Only<span class="w"> </span>output<span class="w"> </span>smallest<span class="w"> </span>values.
+<span class="w">  </span>--max<span class="w">                 </span>Only<span class="w"> </span>output<span class="w"> </span>largest<span class="w"> </span>values.
+<span class="w">  </span>--sum<span class="w">                 </span>Only<span class="w"> </span>output<span class="w"> </span>sums.
+<span class="w">  </span>--mean<span class="w">                </span>Only<span class="w"> </span>output<span class="w"> </span>means.
+<span class="w">  </span>--median<span class="w">              </span>Only<span class="w"> </span>output<span class="w"> </span>medians.
+<span class="w">  </span>--stdev<span class="w">               </span>Only<span class="w"> </span>output<span class="w"> </span>standard<span class="w"> </span>deviations.
+<span class="w">  </span>--len<span class="w">                 </span>Only<span class="w"> </span>output<span class="w"> </span>the<span class="w"> </span>length<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>longest<span class="w"> </span>values.
+<span class="w">  </span>--max-precision<span class="w">       </span>Only<span class="w"> </span>output<span class="w"> </span>the<span class="w"> </span>most<span class="w"> </span>decimal<span class="w"> </span>places.
+<span class="w">  </span>--freq<span class="w">                </span>Only<span class="w"> </span>output<span class="w"> </span>lists<span class="w"> </span>of<span class="w"> </span>frequent<span class="w"> </span>values.
+<span class="w">  </span>--freq-count<span class="w"> </span>FREQ_COUNT
+<span class="w">                        </span>The<span class="w"> </span>maximum<span class="w"> </span>number<span class="w"> </span>of<span class="w"> </span>frequent<span class="w"> </span>values<span class="w"> </span>to<span class="w"> </span>display.
+<span class="w">  </span>--count<span class="w">               </span>Only<span class="w"> </span>output<span class="w"> </span>total<span class="w"> </span>row<span class="w"> </span>count.
+<span class="w">  </span>--decimal-format<span class="w"> </span>DECIMAL_FORMAT
+<span class="w">                        </span>%-format<span class="w"> </span>specification<span class="w"> </span><span class="k">for</span><span class="w"> </span>printing<span class="w"> </span>decimal<span class="w"> </span>numbers.
+<span class="w">                        </span>Defaults<span class="w"> </span>to<span class="w"> </span>locale-specific<span class="w"> </span>formatting<span class="w"> </span>with<span class="w"> </span><span class="s2">"%.3f"</span>.
+<span class="w">  </span>-G,<span class="w"> </span>--no-grouping-separator
+<span class="w">                        </span>Do<span class="w"> </span>not<span class="w"> </span>use<span class="w"> </span>grouping<span class="w"> </span>separators<span class="w"> </span><span class="k">in</span><span class="w"> </span>decimal<span class="w"> </span>numbers.
+<span class="w">  </span>-y<span class="w"> </span>SNIFF_LIMIT,<span class="w"> </span>--snifflimit<span class="w"> </span>SNIFF_LIMIT
+<span class="w">                        </span>Limit<span class="w"> </span>CSV<span class="w"> </span>dialect<span class="w"> </span>sniffing<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>specified<span class="w"> </span>number<span class="w"> </span>of
+<span class="w">                        </span>bytes.<span class="w"> </span>Specify<span class="w"> </span><span class="s2">"0"</span><span class="w"> </span>to<span class="w"> </span>disable<span class="w"> </span>sniffing<span class="w"> </span>entirely,<span class="w"> </span>or
+<span class="w">                        </span><span class="s2">"-1"</span><span class="w"> </span>to<span class="w"> </span>sniff<span class="w"> </span>the<span class="w"> </span>entire<span class="w"> </span>file.
+<span class="w">  </span>-I,<span class="w"> </span>--no-inference<span class="w">    </span>Disable<span class="w"> </span><span class="nb">type</span><span class="w"> </span>inference<span class="w"> </span>when<span class="w"> </span>parsing<span class="w"> </span>the<span class="w"> </span>input.<span class="w"> </span>Disable
+<span class="w">                        </span>reformatting<span class="w"> </span>of<span class="w"> </span>values.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>Basic use:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvstat<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    When an statistic name is passed, only that stat will be
+                    printed:
+                </p>
+                <div class="highlight-console notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="gp">$ </span>csvstat<span class="w"> </span>--min<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+<span class="go">  1. State Name: None</span>
+<span class="go">  2. State Abbreviate: None</span>
+<span class="go">  3. Code: 1</span>
+<span class="go">  4. Montgomery GI Bill-Active Duty: 435</span>
+<span class="go">  5. Montgomery GI Bill- Selective Reserve: 48</span>
+<span class="go">  6. Dependents' Educational Assistance: 118</span>
+<span class="go">  7. Reserve Educational Assistance Program: 60</span>
+<span class="go">  8. Post-Vietnam Era Veteran's Educational Assistance Program: 1</span>
+<span class="go">  9. TOTAL: 768</span>
+<span class="go"> 10. j: None</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    If a single stat <em>and</em> a single column are requested,
+                    only a value will be returned:
+                </p>
+                <div class="highlight-console notranslate">
+                    <div class="highlight">
+                        <pre><span></span><span class="gp">$ </span>csvstat<span class="w"> </span>-c<span class="w"> </span><span class="m">4</span><span class="w"> </span>--mean<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+<span class="go">6,263.904</span>
+</pre>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </article>
+</div>

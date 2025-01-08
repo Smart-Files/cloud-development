@@ -1,0 +1,170 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/sql2csv.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/sql2csv.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="sql2csv">
+            <h1>
+                sql2csv<a
+                    class="headerlink"
+                    href="#sql2csv"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Executes arbitrary commands against a SQL database and
+                    outputs the results as a CSV:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: sql2csv [-h] [-v] [-l] [-V] [--db CONNECTION_STRING] [--query QUERY]
+           [-e ENCODING] [-H]
+           [FILE]
+
+Execute an SQL query on a database and output the result to a CSV file.
+
+positional arguments:
+FILE                  The file to use as the SQL query. If FILE and --query
+                    are omitted, the query is piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+--db CONNECTION_STRING
+                    An sqlalchemy connection string to connect to a
+                    database.
+--query QUERY         The SQL query to execute. Overrides FILE and STDIN.
+-e ENCODING, --encoding ENCODING
+                    Specify the encoding of the input query file.
+-H, --no-header-row   Do not output column names.
+</pre>
+                    </div>
+                </div>
+            </section>
+            <section id="examples">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Load sample data into a table using
+                    <a class="reference internal" href="csvsql.html"
+                        ><span class="doc">csvsql</span></a
+                    >
+                    and then query it using <cite>sql2csv</cite>:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>csvsql<span class="w"> </span>--db<span class="w"> </span><span class="s2">"sqlite:///dummy.db"</span><span class="w"> </span>--tables<span class="w"> </span><span class="s2">"test"</span><span class="w"> </span>--insert<span class="w"> </span>examples/dummy.csv
+sql2csv<span class="w"> </span>--db<span class="w"> </span><span class="s2">"sqlite:///dummy.db"</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">"select * from test"</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Load data about financial aid recipients into PostgreSQL.
+                    Then find the three states that received the most, while
+                    also filtering out empty rows:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>createdb<span class="w"> </span>recipients
+csvsql<span class="w"> </span>--db<span class="w"> </span><span class="s2">"postgresql:///recipients"</span><span class="w"> </span>--tables<span class="w"> </span><span class="s2">"fy09"</span><span class="w"> </span>--insert<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+sql2csv<span class="w"> </span>--db<span class="w"> </span><span class="s2">"postgresql:///recipients"</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">"select * from fy09 where \"State Name\" != '' order by fy09.\"TOTAL\" limit 3"</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    You can even use it as a simple SQL calculator (in this
+                    example an in-memory SQLite database is used as the
+                    default):
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>sql2csv<span class="w"> </span>--query<span class="w"> </span><span class="s2">"select 300 * 47 % 14 * 27 + 7000"</span>
+</pre>
+                    </div>
+                </div>
+                <p>
+                    The connection string
+                    <a
+                        class="reference external"
+                        href="https://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#engine-creation-api"
+                        >accepts parameters</a
+                    >. For example, to set the encoding of a MySQL database:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>sql2csv<span class="w"> </span>--db<span class="w"> </span><span class="s1">'mysql://user:pass@host/database?charset=utf8'</span><span class="w"> </span>--query<span class="w"> </span><span class="s2">"SELECT myfield FROM mytable"</span>
+</pre>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </article>
+</div>

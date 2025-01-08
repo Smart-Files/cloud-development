@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 from typing import Callable
 import fastapi
@@ -6,21 +7,34 @@ from pydantic import BaseModel
 from project import tools_agent
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.cors import CORSMiddleware as CORSMiddleware
+from langchain_core.tools import Tool
 from langchain_core.messages.ai import AIMessage
 from langchain.memory.buffer import ConversationBufferMemory
-from langchain.agents import AgentExecutor, create_react_agent
+from langchain.agents import AgentExecutor, create_react_agent, create_json_chat_agent, create_tool_calling_agent, initialize_agent
 from langchain_core.agents import AgentAction, AgentStep, HumanMessage
-
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.tools import BaseTool
+from langchain_core.runnables.utils import AddableDict
+from langchain_core.messages.ai import AIMessageChunk
+from langchain_core.messages.system import SystemMessage
+from langchain_core.agents import AgentFinish
 import uuid
 import os
 import shutil
 from project.firestore import db, firestore_app
 from project.logger import logger
-from firebase_admin import firestore
+from firebase_admin.firestore import DocumentReference
 import uvicorn
 import dotenv
+from project.websocket_manager import WebSocketManager
+from fastapi import WebSocket, WebSocketDisconnect
+from project.directory_listener import get_directory_contents
 
-dotenv.load_dotenv("/keys/.env")
+
+if os.path.exists("/keys/.env"):
+    dotenv.load_dotenv("/keys/.env")
+elif os.path.exists(".env"):
+    dotenv.load_dotenv(".env")
 
 BASE_DIR = "/app"
 
@@ -33,6 +47,8 @@ DATABASES = {
 
 
 app = fastapi.FastAPI()
+
+manager = WebSocketManager()
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
@@ -52,6 +68,22 @@ connected_uuids = {}
 @app.get("/") 
 async def root():
     return {"message": "Hello World"}
+
+@app.websocket("/ws/{uuid}")
+async def websocket_endpoint(websocket: WebSocket, uuid: str):
+    print("Websocket connection from " + uuid)
+    # Authenticate the UUID before accepting the WebSocket connection
+    if uuid not in connected_uuids:
+        await websocket.close(code=1008)  # Policy violation
+        return
+    await manager.connect(uuid, websocket)
+
+    try:
+        while True:
+            # We don't expect to receive messages here, so just keep it open for sending
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(uuid)
 
 @app.get("/validate/")
 async def validate(uuid: str = fastapi.Query(default=None, description="UUID to validate")):
@@ -78,8 +110,7 @@ async def upload_files_preflight():
 
 @app.post("/upload_files/")
 async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.UploadFile] = fastapi.File(...)):
-    """Starts a file upload operation.
-    """
+    """Starts a file upload operation."""
 
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
@@ -102,7 +133,7 @@ async def download_file(uuid: str, file_path: str):
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
     # Define the directory where your files are stored
-    directory =os.path.join("/working_dir", uuid)
+    directory = os.path.join("/working_dir", uuid)
     
     full_path = os.path.join(directory, file_path)
     # Ensure the directory traversal is secure
@@ -116,19 +147,29 @@ async def download_file(uuid: str, file_path: str):
     if not os.path.isfile(secure_path):
         raise fastapi.HTTPException(status_code=404, detail="File not found")
 
-    return fastapi.FileResponse(secure_path, filename=os.path.basename(secure_path))
+    return fastapi.responses.FileResponse(secure_path, filename=os.path.basename(secure_path))
 
 
-class AIMessageDecoder(json.JSONEncoder):
+class AIMessageEncoder(json.JSONEncoder):
     def default(self, obj):
             if isinstance(obj, AgentAction):
-                return { "type": "action", "tool" : obj.tool, "tool_input": obj.tool_input, "log": obj.log}
+                return {"type": "AgentAction", "tool" : obj.tool, "tool_input": obj.tool_input, "log": obj.log}
             if isinstance(obj, AIMessage):
-                return { "message": "AI", "type": "message", "content" : obj.content}
+                return {"type": "AIMessage", "content" : obj.content, "tool_calls": [{"name": tool_call.name, "args": tool_call.args, "id": tool_call.id} for tool_call in obj.tool_calls]}
             if isinstance(obj, AgentStep):
-                return {"type": "step", "action": obj.action, "observation": obj.observation}
+                return {"type": "AgentStep", "action": obj.action, "observation": obj.observation}
             if isinstance(obj, HumanMessage):
-                return {"message": "Human", "type": "message", "content": obj.content}
+                return {"type": "HumanMessage", "content": obj.content}
+            if isinstance(obj, AddableDict):
+                return {key: value for key, value in obj.items()}
+            if isinstance(obj, AIMessageChunk):
+                return obj.content
+            if isinstance(obj, SystemMessage):
+                return obj.content
+            if isinstance(obj, AgentFinish):
+                return {"output": obj.return_values, "messages": obj.messages, "log": obj.log}
+            if hasattr(obj, 'content'):
+                return {"content": obj.content, "type": obj.__class__.__name__}
             return json.JSONEncoder.default(self, obj)
 
 
@@ -143,6 +184,10 @@ def set_agent_executor(agent_executor: AgentExecutor, uuid: str):
 def get_agent_executor(uuid: str):
     return agent_executors.get(uuid, None)
 
+async def async_listdir(path):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, os.listdir, path)
+
 @app.post("/stop")
 async def stop_agent(uuid: Auth = fastapi.Form(...)):
     uuid = uuid.uuid
@@ -155,7 +200,7 @@ async def stop_agent(uuid: Auth = fastapi.Form(...)):
     
 
 @app.post("/process_request/")
-async def stream_response(uuid: str = fastapi.Form(...), query: str = fastapi.Form(...)):
+async def process_request(uuid: str = fastapi.Form(...), query: str = fastapi.Form(...)):
     """Starts a file processing operation
     """
 
@@ -170,57 +215,71 @@ async def stream_response(uuid: str = fastapi.Form(...), query: str = fastapi.Fo
 
     os.makedirs(file_dir, exist_ok=True)
     
-    # Creates agent
+    # Creates agent  
     agent_config = await tools_agent.init_tools_agent(uuid)
-    agent = create_react_agent(agent_config["llm"], agent_config["tools"], agent_config["prompt"])
-    agent_executor = AgentExecutor(agent=agent, 
-                                   tools=agent_config["tools"], 
-                                   agent_config=True, 
-                                   max_execution_time=90,  
-                                   max_iterations=25,
-                                   handle_parsing_errors=True, 
-                                   memory=ConversationBufferMemory())
-    
-    
-    set_agent_executor(agent_executor, uuid);
+    # agent = create_tool_calling_agent(llm=agent_config["llm"], tools=agent_config["tools"], prompt=agent_config["prompt"])
+
+    conversational_memory = ConversationBufferWindowMemory(
+            memory_key='chat_history',
+            k=6,
+            return_messages=True
+    )
+
+    agent = create_react_agent(
+        llm=agent_config["llm"],
+        tools=agent_config["tools"],
+        prompt=agent_config["prompt"]
+    )
+
+    agent_executor = AgentExecutor(
+        agent=agent,
+        tools=agent_config["tools"],
+        verbose=True,
+        max_iterations=20,
+        early_stopping_method='generate',
+        memory=conversational_memory,
+        handle_parsing_errors=True
+    )
+
+    tools: list[Tool] = agent_config["tools"]
 
     input_files = os.listdir(file_dir)
 
-    process_doc = db.collection("process") \
-        .document(uuid)
+    query_input = f"{query}. {'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"
 
-    events_ref = process_doc \
-            .collection("events")
-    
-    events_ref.document() \
-        .set({"status": "started", "input_files": input_files, "query": query})
+    await db.collection("process").document(uuid).set({"status": "started", "input_files": input_files, "query": query})
 
-    metadata_doc = process_doc \
-        .collection("events") \
-        .document("metadata")
-    
+    async for event in agent_executor.astream_events({"input": query_input}, version="v1"):
+        if isinstance(event, dict):
+            event_name = event.get("event")
+            data = {}
 
-    process_doc.set({"status": "started", "input_files": input_files, "query": query, "chunks": [], "chunk_count": 0})
+            # if event_name in ["on_chat_model_start", "on_chat_model_end", "on_chat_model_stream"]:
+            if event_name in ["on_chat_model_end", "on_chat_model_start", "on_chat_model_stream", "on_tool_start", "on_tool_end", "on_chain_end"]:
+                run_id = event.get("run_id", "")
+                
+                if event_name == "on_chat_model_end" or event_name == "on_chain_end":
+                    output = event['data'].get('output')
+                    data = {"content": AIMessageEncoder().encode(output)}
+                elif event_name == "on_chat_model_stream":
+                    content = event.get("data", {}).get("chunk", None)
+                    data = {"content": content.content if content else ""}
+                elif event_name == "on_tool_start" or event_name == "on_tool_end":
+                    data = {"content": AIMessageEncoder().encode(event)}
+                elif event_name == "on_chat_model_start":
+                    data = {"content": ""}[]
+                elif event_name == "on_chain_end":
+                    data = {"content": ""}
 
-    async for result in agent_executor.astream({"input": f"{query}.\n\n{'Input Files: ' + str(input_files) if len(input_files) > 0 else 'No input files have been provided.'}"}):
-        logger.info("RESULT: " + str(result))
-        if (result.get('output', None)):
-            files = os.listdir(file_dir)
-            result['files'] = files
-        data_string = json.dumps(result, cls=AIMessageDecoder)
-        
-        result = json.loads(data_string)
+                data.update({"event": event_name, "run_id": run_id, "timestamp": datetime.datetime.now().isoformat()})
+                await manager.send_personal_message(uuid, data)
 
-        result["uuid"] = uuid
-
-        # events_ref.document() \
-        #     .set(result.update({"status": "chunk", "input_files": os.listdir(file_dir), "query": query}))
-
-        process_doc.set({"chunk_count": firestore.Increment(1), "chunks": firestore.ArrayUnion([result])})
+    await manager.send_personal_message(uuid, {"event": "agent_finished", "run_id": "", "timestamp": datetime.datetime.now().isoformat(), "files": get_directory_contents(uuid)})
+    return {"status": "completed"}
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://smartfile-422907.web.app/"],
+    allow_origins=["https://smartfile-422907.web.app/", "http://localhost:5173/"],
     allow_credentials=True,
     allow_methods=["DELETE", "GET", "POST", "PUT"],
     allow_headers=["*"],
@@ -231,4 +290,6 @@ if __name__ == "__main__":
     backend_host = "0.0.0.0"
     backend_port = 8080
 
-    uvicorn.run(app, host=backend_host, port=backend_port, log_level="info", proxy_headers=True, server_header=False, headers=[("Access-Control-Allow-Origin", "https://smartfile-422907.web.app")])
+    logger.info("Running Webserver!")
+
+    uvicorn.run(app, host=backend_host, port=backend_port, log_level="info", proxy_headers=True, server_header=False, headers=[("Access-Control-Allow-Origin", "http://localhost:5173")])

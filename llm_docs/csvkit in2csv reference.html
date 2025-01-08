@@ -1,0 +1,316 @@
+<div class="article-container">
+    <a href="#" class="back-to-top muted-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+                d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"
+            ></path>
+        </svg>
+        <span>Back to top</span>
+    </a>
+    <div class="content-icon-container">
+        <div class="view-this-page">
+            <a
+                class="muted-link"
+                href="../_sources/scripts/in2csv.rst.txt"
+                title="View this page"
+            >
+                <svg><use href="#svg-eye"></use></svg>
+                <span class="visually-hidden">View this page</span>
+            </a>
+        </div>
+
+        <div class="edit-this-page">
+            <a
+                class="muted-link"
+                href="https://github.com/wireservice/csvkit/edit/master/docs/scripts/in2csv.rst"
+                title="Edit this page"
+            >
+                <svg><use href="#svg-pencil"></use></svg>
+                <span class="visually-hidden">Edit this page</span>
+            </a>
+        </div>
+        <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+                <div class="visually-hidden">
+                    Toggle Light / Dark / Auto color theme
+                </div>
+                <svg class="theme-icon-when-auto-light">
+                    <use href="#svg-sun-with-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-auto-dark">
+                    <use href="#svg-moon-with-sun"></use>
+                </svg>
+                <svg class="theme-icon-when-dark">
+                    <use href="#svg-moon"></use>
+                </svg>
+                <svg class="theme-icon-when-light">
+                    <use href="#svg-sun"></use>
+                </svg>
+            </button>
+        </div>
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"
+                ><svg><use href="#svg-toc"></use></svg
+            ></i>
+        </label>
+    </div>
+    <article role="main" id="furo-main-content">
+        <section id="in2csv">
+            <h1>
+                in2csv<a
+                    class="headerlink"
+                    href="#in2csv"
+                    title="Link to this heading"
+                    >¶</a
+                >
+            </h1>
+            <section id="description" class="">
+                <h2>
+                    Description<a
+                        class="headerlink"
+                        href="#description"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>Converts various tabular data formats into CSV.</p>
+                <p>
+                    Converting fixed width requires that you provide a schema
+                    file with the “-s” option. The schema file should have the
+                    following format:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>column,start,length
+name,0,30
+birthday,30,10
+age,40,3
+</pre>
+                    </div>
+                </div>
+                <p>
+                    The header line is required though the columns may be in any
+                    order:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>usage: in2csv [-h] [-d DELIMITER] [-t] [-q QUOTECHAR] [-u {0,1,2,3}] [-b]
+          [-p ESCAPECHAR] [-z FIELD_SIZE_LIMIT] [-e ENCODING] [-L LOCALE]
+          [-S] [--blanks] [--null-value NULL_VALUES [NULL_VALUES ...]]
+          [--date-format DATE_FORMAT] [--datetime-format DATETIME_FORMAT]
+          [-H] [-K SKIP_LINES] [-v] [-l] [--zero] [-V]
+          [-f {csv,dbf,fixed,geojson,json,ndjson,xls,xlsx}] [-s SCHEMA]
+          [-k KEY] [-n] [--sheet SHEET] [--write-sheets WRITE_SHEETS]
+          [--use-sheet-names] [--reset-dimensions]
+          [--encoding-xls ENCODING_XLS] [-y SNIFF_LIMIT] [-I]
+          [FILE]
+
+Convert common, but less awesome, tabular data formats to CSV.
+
+positional arguments:
+FILE                  The CSV file to operate on. If omitted, will accept
+                    input as piped data via STDIN.
+
+optional arguments:
+-h, --help            show this help message and exit
+-f {csv,dbf,fixed,geojson,json,ndjson,xls,xlsx}, --format {csv,dbf,fixed,geojson,json,ndjson,xls,xlsx}
+                    The format of the input file. If not specified will be
+                    inferred from the file type.
+-s SCHEMA, --schema SCHEMA
+                    Specify a CSV-formatted schema file for converting
+                    fixed-width files. See web documentation.
+-k KEY, --key KEY     Specify a top-level key to look within for a list of
+                    objects to be converted when processing JSON.
+-n, --names           Display sheet names from the input Excel file.
+--sheet SHEET         The name of the Excel sheet to operate on.
+--write-sheets WRITE_SHEETS
+                    The names of the Excel sheets to write to files, or
+                    "-" to write all sheets.
+--use-sheet-names     Use the sheet names as file names when --write-sheets
+                    is set.
+--reset-dimensions    Ignore the sheet dimensions provided by the XLSX file.
+--encoding-xls ENCODING_XLS
+                    Specify the encoding of the input XLS file.
+-y SNIFF_LIMIT, --snifflimit SNIFF_LIMIT
+                    Limit CSV dialect sniffing to the specified number of
+                    bytes. Specify "0" to disable sniffing.
+-I, --no-inference    Disable type inference (and --locale, --date-format,
+                    --datetime-format) when parsing CSV input.
+
+Some command-line flags only pertain to specific input formats.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    See also:
+                    <a
+                        class="reference internal"
+                        href="../common_arguments.html"
+                        ><span class="doc"
+                            >Arguments common to all tools</span
+                        ></a
+                    >.
+                </p>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        The “ndjson” format refers to “newline delimited JSON”,
+                        as used by many streaming APIs.
+                    </p>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        If an XLS looks identical to an XLSX when viewed in
+                        Excel, they may not be identical as CSV. For example,
+                        XLSX has an integer type, but XLS doesn’t. Numbers that
+                        look like integers from an XLS will have decimals in
+                        CSV, but those from an XLSX won’t.
+                    </p>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        To convert from HTML, consider
+                        <a
+                            class="reference external"
+                            href="https://messytables.readthedocs.io/"
+                            >messytables</a
+                        >.
+                    </p>
+                </div>
+            </section>
+            <section id="examples" class="">
+                <h2>
+                    Examples<a
+                        class="headerlink"
+                        href="#examples"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    Convert the 2000 census geo headers file from fixed-width to
+                    CSV and from latin-1 encoding to utf8:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>-e<span class="w"> </span>iso-8859-1<span class="w"> </span>-f<span class="w"> </span>fixed<span class="w"> </span>-s<span class="w"> </span>examples/realdata/census_2000/census2000_geo_schema.csv<span class="w"> </span>examples/realdata/census_2000/usgeo_excerpt.upl
+</pre>
+                    </div>
+                </div>
+                <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>
+                        A library of fixed-width schemas is maintained in the
+                        <code class="docutils literal notranslate"
+                            ><span class="pre">ffs</span></code
+                        >
+                        project:
+                    </p>
+                    <p>
+                        <a
+                            class="reference external"
+                            href="https://github.com/wireservice/ffs"
+                            >https://github.com/wireservice/ffs</a
+                        >
+                    </p>
+                </div>
+                <p>Convert an Excel .xls file:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>examples/test.xls
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Standardize the formatting of a CSV file (quoting, line
+                    endings, etc.):
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>examples/realdata/FY09_EDU_Recipients_by_State.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Fetch csvkit’s open issues from the GitHub API, convert the
+                    JSON response into a CSV and write it to a file:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>curl<span class="w"> </span>https://api.github.com/repos/wireservice/csvkit/issues?state<span class="o">=</span>open<span class="w"> </span><span class="p">|</span><span class="w"> </span>in2csv<span class="w"> </span>-f<span class="w"> </span>json<span class="w"> </span>-v
+</pre>
+                    </div>
+                </div>
+                <p>Convert a DBase DBF file to an equivalent CSV:</p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>examples/testdbf.dbf
+</pre>
+                    </div>
+                </div>
+                <p>
+                    This tool names unnamed headers. To avoid that behavior,
+                    run:
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>--no-header-row<span class="w"> </span>examples/test.xlsx<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span>+2
+</pre>
+                    </div>
+                </div>
+            </section>
+            <section id="troubleshooting" class="active">
+                <h2>
+                    Troubleshooting<a
+                        class="headerlink"
+                        href="#troubleshooting"
+                        title="Link to this heading"
+                        >¶</a
+                    >
+                </h2>
+                <p>
+                    If an error like the following occurs when providing an
+                    input file in CSV or Excel format:
+                </p>
+                <div class="highlight-none notranslate">
+                    <div class="highlight">
+                        <pre><span></span>ValueError: Row 0 has 11 values, but Table only has 1 columns.
+</pre>
+                    </div>
+                </div>
+                <p>
+                    Then the input file might have initial rows before the
+                    header and data rows. You can skip such rows with
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--skip-lines</span></code
+                    >
+                    (<code class="code docutils literal notranslate"
+                        ><span class="pre">-K</span></code
+                    >):
+                </p>
+                <div class="highlight-bash notranslate">
+                    <div class="highlight">
+                        <pre><span></span>in2csv<span class="w"> </span>--skip-lines<span class="w"> </span><span class="m">3</span><span class="w"> </span>examples/test_skip_lines.csv
+</pre>
+                    </div>
+                </div>
+                <p>
+                    If an XLSX file yields too few rows or too few columns, then
+                    the application that created the file might have
+                    <a
+                        class="reference external"
+                        href="https://openpyxl.readthedocs.io/en/stable/optimized.html#worksheet-dimensions"
+                        >incorrectly set the worksheet’s dimensions</a
+                    >. Try again with the
+                    <code class="code docutils literal notranslate"
+                        ><span class="pre">--reset-dimensions</span></code
+                    >
+                    option.
+                </p>
+            </section>
+        </section>
+    </article>
+</div>
