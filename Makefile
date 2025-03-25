@@ -5,7 +5,7 @@ IMAGE_NAME := gcr.io/smartfile-422907/smartfile-docker/server-image
 
 # @local dev
 run-local:
-	python3 -m project.app
+	python -m project.app
 
 build:
 	docker build -t $(IMAGE_NAME):$(VERSION) .

@@ -11,11 +11,14 @@ def get_current_directory_contents():
     contents = os.listdir(current_directory)
     return contents
 
-def execute_command_factory(uuid: str) -> dict["stdout": str, "stderr": str]:
-    return partial(execute_command, uuid)
+def execute_command_factory(uuid: str, working_dir: str):
+    """Creates a partial function that only exposes the command parameter"""
+    def wrapped_execute(command: str):
+        return execute_command(uuid=uuid, command=command, working_dir=working_dir)
+    return wrapped_execute
 
 
-def execute_command(uuid: str, command: str) -> dict["stdout": str, "stderr": str]:
+def execute_command(uuid: str, command: str, working_dir: str) -> dict["stdout": str, "stderr": str]:
     """Executes a command in the shell and returns the output.
 
     Args:
@@ -35,8 +38,8 @@ def execute_command(uuid: str, command: str) -> dict["stdout": str, "stderr": st
 
     cwd = os.getcwd()
     print(cwd)
-    Path(f"/working_dir/{uuid}").mkdir(parents=True, exist_ok=True)
-    os.chdir(f"/working_dir/{uuid}")
+    Path(f"{working_dir}/{uuid}").mkdir(parents=True, exist_ok=True)
+    os.chdir(f"{working_dir}/{uuid}")
 
      
     result = subprocess.run(

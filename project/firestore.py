@@ -9,14 +9,14 @@ firestore_app = None
 db = None
 
 
-if os.path.exists('/firebase/firebase_service_account.json'):
+if os.path.exists('/firebase/serviceAccountKey.json'):
     logger.info('Firebase production service account found, initializing Firestore...')
-    cred = credentials.Certificate('/firebase/firebase_service_account.json')
+    cred = credentials.Certificate('/firebase/serviceAccountKey.json')
     firestore_app = firebase_admin.initialize_app(cred)
     db = firestore.client(firestore_app)
-elif os.path.exists("firebase_service_account.json"):
+elif os.path.exists("serviceAccountKey.json"):
     logger.warning('Firebase local service account found, Firestore initializing...')
-    cred = credentials.Certificate('firebase_service_account.json')
+    cred = credentials.Certificate('serviceAccountKey.json')
     firestore_app = firebase_admin.initialize_app(cred)
     db = firestore.client(firestore_app)
 

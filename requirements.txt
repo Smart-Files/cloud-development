@@ -1,0 +1,17 @@
+fastapi
+firebase_admin
+langchain
+langchain_community
+langchain_core
+langchain_openai
+langchain_pinecone
+langchain_qdrant
+langsmith
+pinecone
+pydantic
+python-dotenv
+SQLAlchemy
+starlette
+watchdog
+uvicorn[standard]
+python-multipart

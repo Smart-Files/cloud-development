@@ -26,6 +26,7 @@ OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 
 
 LANGCHAIN_TRACING_V2=True
@@ -41,20 +42,24 @@ MODEL_MIXTRAL22 = "mistralai/mixtral-8x22b-instruct"
 MODEL_PALM2 = "google/palm-2-codechat-bison-32k"
 MODEL_QWEN = "qwen/qwen-2-72b-instruct"
 MODEL_RPLUS = "cohere/command-r-plus"
+MODEL_DEEPSEEK = "deepseek-reasoner"
+MODEL_DEEPSEEK_CHAT = "deepseek-chat"
 
 # API_BASE = "https://api.groq.com/openai/v1"
-API_BASE = "https://openrouter.ai/api/v1"
+OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
+DEEPSEEK_API_BASE = "https://api.deepseek.com"
 
 
 
 # Initliaze models
-llm_llama3 = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, openai_api_base=API_BASE, model_name=MODEL_LLAMA3_70B, streaming=True)
+llm_llama3 = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_API_BASE, model_name=MODEL_LLAMA3_70B, streaming=True)
 # llm_llama3_8b = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, openai_api_base=API_BASE, model_name=MODEL_LLAMA3_8B)
 # llm_codellama = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, openai_api_base=API_BASE, model_name=MODEL_CODELLAMA)
-llm_mixtral22 = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, openai_api_base=API_BASE, model_name=MODEL_MIXTRAL22, streaming=True)
-llm_qwen = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, openai_api_base=API_BASE, model_name=MODEL_QWEN, streaming=True)
+llm_mixtral22 = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_API_BASE, model_name=MODEL_MIXTRAL22, streaming=True)
+llm_qwen = ChatOpenAI(openai_api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_API_BASE, model_name=MODEL_QWEN, streaming=True)
+llm_deepseek = ChatOpenAI(openai_api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_API_BASE, model_name=MODEL_DEEPSEEK, streaming=True)
 
-current_llm = llm_mixtral22
+current_llm = llm_deepseek
 
 client = Client()
 
@@ -70,8 +75,12 @@ file_tool = create_file_retrieval_tool(retriever=retriever)
 
     Returns {"llm": llm_llama3, "tools": tools, "prompt": prompt}
 """ 
-async def init_tools_agent(uuid: str) -> dict[str, dict[ChatOpenAI, list[Tool], BasePromptTemplate]]:
-    execute_tool = Tool(name="execute_command",func=execute_command_factory(uuid), description="Executes a shell command and returns the output. Do not install any software or packages, only packages available have been listed")
+async def init_tools_agent(uuid: str, working_dir: str) -> dict[str, dict[ChatOpenAI, list[Tool], BasePromptTemplate]]:
+    execute_tool = Tool(
+        name="execute_command",
+        func=execute_command_factory(uuid, working_dir),
+        description="Executes a shell command and returns the output. Do not install any software or packages, only packages available have been listed"
+    )
 
     tools = [execute_tool, file_tool]
 

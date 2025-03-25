@@ -38,6 +38,8 @@ elif os.path.exists(".env"):
 
 BASE_DIR = "/app"
 
+WORKING_DIR = "/tmp/working_dir"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -57,11 +59,6 @@ manager = WebSocketManager()
 connected_uuids = {}
 
 
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next):
-#     logger.debug(f"Received request: {request.method} {request.url}")
-#     response = await call_next(request)
-#     return response
 
 # gcloud api-gateway api-configs create server_config --api=server --openapi-spec=openapi.yaml --project=smartfile-422907 --backend-auth-service-account=docker-build-neil-331@smartfile-422907.iam.gserviceaccount.com
 
@@ -115,7 +112,7 @@ async def upload_files(uuid: str = fastapi.Form(...), files: list[fastapi.Upload
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
 
-    file_dir = os.path.join("/working_dir", uuid)
+    file_dir = os.path.join(WORKING_DIR, uuid)
     os.makedirs(file_dir, exist_ok=True)
 
     for file in files:
@@ -133,7 +130,7 @@ async def download_file(uuid: str, file_path: str):
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
     # Define the directory where your files are stored
-    directory = os.path.join("/working_dir", uuid)
+    directory = os.path.join(WORKING_DIR, uuid)
     
     full_path = os.path.join(directory, file_path)
     # Ensure the directory traversal is secure
@@ -211,12 +208,12 @@ async def process_request(uuid: str = fastapi.Form(...), query: str = fastapi.Fo
     if connected_uuids.get(uuid, None) == None:
         return {"error": "Forbidden: invalid uuid provided", "code": 400}
     
-    file_dir = os.path.join("/working_dir", uuid)
+    file_dir = os.path.join(WORKING_DIR, uuid)
 
     os.makedirs(file_dir, exist_ok=True)
     
     # Creates agent  
-    agent_config = await tools_agent.init_tools_agent(uuid)
+    agent_config = await tools_agent.init_tools_agent(uuid, WORKING_DIR)
     # agent = create_tool_calling_agent(llm=agent_config["llm"], tools=agent_config["tools"], prompt=agent_config["prompt"])
 
     conversational_memory = ConversationBufferWindowMemory(
@@ -267,14 +264,14 @@ async def process_request(uuid: str = fastapi.Form(...), query: str = fastapi.Fo
                 elif event_name == "on_tool_start" or event_name == "on_tool_end":
                     data = {"content": AIMessageEncoder().encode(event)}
                 elif event_name == "on_chat_model_start":
-                    data = {"content": ""}[]
+                    data = {"content": ""}
                 elif event_name == "on_chain_end":
                     data = {"content": ""}
 
                 data.update({"event": event_name, "run_id": run_id, "timestamp": datetime.datetime.now().isoformat()})
                 await manager.send_personal_message(uuid, data)
 
-    await manager.send_personal_message(uuid, {"event": "agent_finished", "run_id": "", "timestamp": datetime.datetime.now().isoformat(), "files": get_directory_contents(uuid)})
+    await manager.send_personal_message(uuid, {"event": "agent_finished", "run_id": "", "timestamp": datetime.datetime.now().isoformat(), "files": get_directory_contents(uuid, WORKING_DIR)})
     return {"status": "completed"}
 
 app.add_middleware(

@@ -4,7 +4,6 @@ from langchain_community.document_loaders.html_bs import BSHTMLLoader
 from langchain_community.document_loaders.text import TextLoader
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter, HTMLHeaderTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain.tools.retriever import create_retriever_tool
@@ -14,7 +13,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy.orm import Query, Session
 from langchain.indexes import _sql_record_manager
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
 
 UpsertionRecord = _sql_record_manager.UpsertionRecord
 
@@ -25,17 +24,48 @@ PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 QDRANT_ENDPOINT = os.getenv('QDRANT_ENDPOINT')
 
-print("QDRANT_ENDPOINT", QDRANT_ENDPOINT)
+# Initialize Pinecone client
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
-embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY, model="text-embedding-3-large", chunk_size=400, dimensions=1024)
+# Create custom embeddings class for llama-text-embed-v2
+class PineconeEmbeddings:
+    def __init__(self, pc_client):
+        self.client = pc_client
+        self.dimensions = 768  # llama-text-embed-v2 dimension size
 
+    def embed_documents(self, texts):
+        embeddings = self.client.inference.embed(
+            model="llama-text-embed-v2",
+            inputs=texts,
+            parameters={"input_type": "passage"}
+        )
+        return [e['values'] for e in embeddings]
+
+    def embed_query(self, text):
+        embedding = self.client.inference.embed(
+            model="llama-text-embed-v2",
+            inputs=[text],
+            parameters={"input_type": "query"}
+        )
+        return embedding[0]['values']
+
+# Replace OpenAI embeddings with Pinecone embeddings
+embeddings = PineconeEmbeddings(pc)
+
+# Initialize Pinecone index
 index_name = "smartfile-index"
-# vectorstore = Qdrant(embeddings=embeddings, collection_name=index_name)
-vectorstore = Qdrant.from_existing_collection(
+if index_name not in pc.list_indexes().names():
+    pc.create_index(
+        name=index_name,
+        dimension=768,
+        metric="cosine"
+    )
+
+# Replace Qdrant vectorstore with Pinecone
+vectorstore = PineconeVectorStore(
+    index=pc.Index(index_name),
     embedding=embeddings,
-    collection_name=index_name,
-    url=QDRANT_ENDPOINT,
-    api_key=QDRANT_API_KEY,
+    text_key="text"
 )
 
 namespace = f"pinecone/{index_name}"
@@ -51,7 +81,7 @@ def _clear():
     index([], record_manager, vectorstore, cleanup="full", source_id_key="source")
 
 
-def load_documents_db(directory: str, persist_dir: str = "db") -> Qdrant:
+def load_documents_db(directory: str) -> PineconeVectorStore:
     documents = []
     dir_contents = os.listdir(directory)
 
@@ -150,10 +180,10 @@ def create_file_retrieval_tool(retriever):
             - Includes tools such as:
             - in2csv: Converts various tabular data formats into CSV.
             - csvclean: Reports and fixes common errors in a CSV file.
-            - csvcut: Filters and truncates CSV files. Like the Unix “cut” command, but for tabular data.
+            - csvcut: Filters and truncates CSV files. Like the Unix "cut" command, but for tabular data.
             - csvgrep: Filter tabular data to only those rows where certain columns contain a given value or match a regular expression.
             - csvjoin: Merges two or more CSV tables together using a method analogous to SQL JOIN operation. By default it performs an inner join, but full outer, left outer, and right outer are also available via flags.
-            - csvsort: Sort CSV files. Like the Unix “sort” command, but for tabular data.
+            - csvsort: Sort CSV files. Like the Unix "sort" command, but for tabular data.
             - csvstack: Stack up the rows from multiple CSV files, optionally adding a grouping value to each row.
             - csvjson: Converts a CSV file into JSON or GeoJSON (depending on flags).
             - csvlook: Renders a CSV to the command line in a Markdown-compatible, fixed-width format.

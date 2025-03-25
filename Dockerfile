@@ -55,29 +55,7 @@ ENV PATH="${PATH}:/root/.local/bin"
 # RUN python3.11 -m venv /code/venv
 
 # Install dependencies without a virtual environment
-RUN pip install --user --no-cache-dir fastapi langchain-core \
-    langchain \
-    pysqlite3-binary \
-    chromadb \
-    langchain-openai \
-    firebase-admin \
-    ffmpeg \
-    aiohttp \
-    pandoc \
-    beautifulsoup4 \
-    langchain_pinecone \
-    pinecone-client \
-    langchain-community \
-    python-dotenv \
-    langchain-chroma \
-    uvicorn \
-    langchainhub \
-    csvkit \
-    pypdf \
-    langchain_qdrant \
-    python-multipart \
-    watchdog \
-    asyncio
+RUN pip install --user --no-cache-dir -r requirements.txt
 
 COPY . /code/
 

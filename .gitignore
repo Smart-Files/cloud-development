@@ -2,3 +2,12 @@
 __pycache__/
 .terraform.lock.hcl
 .env
+firebase_service_account.json
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+serviceAccountKey.json
