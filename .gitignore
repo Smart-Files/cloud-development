@@ -5,3 +5,4 @@
 .venv
 firebase-credentials.json
 firebase-service-account.json
+node_modules/
