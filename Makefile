@@ -14,7 +14,7 @@ push: build
 	docker push $(IMAGE_NAME):$(VERSION)
 
 test:
-	docker-compose up smartfile-chat-app --build
+	docker compose up smartfile-chat-app --build
 
 run:
 	docker run -t $
